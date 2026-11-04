@@ -705,3 +705,74 @@ h2:target, h3:target { color: var(--accent-ink); }
 .admonition:target { box-shadow: 0 0 0 2px var(--accent-soft); }
 figure { scroll-margin-top: calc(var(--topbar) + 1rem); }
 .admonition { scroll-margin-top: calc(var(--topbar) + 1rem); }
+
+/* ---------------------------------------------------------------- export */
+
+.export-host { position: relative; }
+div.export-host { display: flow-root; }
+.export-toggle {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 5;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ink-3);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.export-host:hover > .export-toggle, .export-toggle:focus-visible, .export-toggle[aria-expanded="true"] { opacity: 1; }
+.export-toggle:hover { color: var(--accent-ink); }
+@media (hover: none) { .export-toggle { opacity: 0.55; } }
+.lightbox-content .export-toggle { display: none; }
+.export-menu {
+  position: absolute;
+  z-index: 60;
+  min-width: 11rem;
+  padding: 0.25rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+.export-row { display: flex; align-items: stretch; }
+.export-menu button {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 3px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+.export-menu button:hover, .export-menu button:focus-visible { background: var(--paper-3); outline: none; }
+.export-format { flex: 1; display: flex; justify-content: space-between; gap: 1rem; text-align: left; }
+.export-extension { color: var(--ink-3); font-family: var(--mono); font-size: 0.78rem; }
+.export-menu .export-copy { color: var(--ink-3); font-size: 0.78rem; }
+.export-stage {
+  position: absolute;
+  left: -100000px;
+  top: 0;
+  box-sizing: content-box;
+  padding: 0.5rem;
+  background: #ffffff;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.export-stage figure, .export-stage .highlight, .export-stage .arithmatex, .export-stage .admonition { margin: 0; }
+.export-stage .highlight, .export-stage .arithmatex { overflow: visible; }
+@media print {
+  .export-toggle, .export-menu { display: none !important; }
+  .export-printing body > :not(.export-stage) { display: none !important; }
+  .export-printing .export-stage { position: static; }
+}

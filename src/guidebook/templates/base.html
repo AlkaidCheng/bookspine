@@ -173,5 +173,8 @@ window.MathJax = {
 </div>
 
 <script src="{{ page.root }}static/book.js" defer></script>
+{% if book.export_menus %}
+<script src="{{ page.root }}static/export.js" defer></script>
+{% endif %}
 </body>
 </html>
