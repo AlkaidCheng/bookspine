@@ -54,6 +54,12 @@ def test_headings_are_numbered_within_the_chapter() -> None:
     assert 'href="#two"' in page.body_html
 
 
+def test_a_section_title_holds_the_heading_text_not_its_html() -> None:
+    page = make_page('<h2 id="rd">Updates and R&amp;D</h2>')
+    number_headings(page)
+    assert page.sections[0]["title"] == "Updates and R&D"
+
+
 def test_a_section_page_numbers_within_itself() -> None:
     page = make_page('<h2 id="one">One</h2>', kind="section", number="3.2")
     number_headings(page)

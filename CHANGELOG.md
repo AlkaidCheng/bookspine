@@ -19,3 +19,4 @@
 - Style code blocks with `linenums` in the theme's colours, and stop `pygments_dark` colouring their numbers in the light scheme (#14).
 - Move the `.tool-group` of a code block with its margins when the window resizes (#14).
 - Keep coloured inline code clear of the text before it at phone width (#14).
+- Show a heading's `&` as written in the sidebar, where `number_headings` passed on its HTML entity (#15).
