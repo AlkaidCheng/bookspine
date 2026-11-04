@@ -192,8 +192,8 @@ def test_an_unlisted_top_level_entry_is_left_alone(built_site_dir: Path) -> None
     folder_path.parent.mkdir()
     folder_path.write_text("mine")
     replace_site(built_site_dir, FILES)
-    assert file_path.read_text() == "mine"
-    assert folder_path.read_text() == "mine"
+    assert file_path.read_text(encoding="utf-8") == "mine"
+    assert folder_path.read_text(encoding="utf-8") == "mine"
     assert "notes.pdf" not in stamp_entries(built_site_dir)
 
 
@@ -211,7 +211,7 @@ def test_a_folder_without_a_stamp_stops_the_build(site_dir: Path) -> None:
     keepsake_path.write_text("not from a build")
     with pytest.raises(BuildError, match="no .guidebook-stamp.json"):
         replace_site(site_dir, FILES)
-    assert keepsake_path.read_text() == "not from a build"
+    assert keepsake_path.read_text(encoding="utf-8") == "not from a build"
     assert sorted(path.name for path in site_dir.iterdir()) == ["index.html"]
 
 
@@ -221,7 +221,7 @@ def test_an_unlisted_entry_the_build_needs_stops_it(built_site_dir: Path) -> Non
     keepsake_path.write_text("mine")
     with pytest.raises(BuildError, match="holds guide, which the build needs"):
         replace_site(built_site_dir, {**FILES, "guide/index.html": b"part"})
-    assert keepsake_path.read_text() == "mine"
+    assert keepsake_path.read_text(encoding="utf-8") == "mine"
     assert (built_site_dir / "index.html").read_bytes() == b"home"
 
 
@@ -279,7 +279,7 @@ def test_a_listed_entry_that_is_a_link_is_refused(
     make_symlink(hep_dir, outside_dir)
     with pytest.raises(BuildError, match="symbolic link"):
         replace_site(built_site_dir, FILES)
-    assert (outside_dir / "keep.txt").read_text() == "mine"
+    assert (outside_dir / "keep.txt").read_text(encoding="utf-8") == "mine"
     assert (built_site_dir / "index.html").read_bytes() == b"home"
 
 
@@ -291,7 +291,7 @@ def test_a_link_inside_an_entry_is_removed_and_not_followed(
     (outside_dir / "keep.txt").write_text("mine")
     make_symlink(built_site_dir / "hep" / "link", outside_dir)
     replace_site(built_site_dir, FILES)
-    assert (outside_dir / "keep.txt").read_text() == "mine"
+    assert (outside_dir / "keep.txt").read_text(encoding="utf-8") == "mine"
     assert not (built_site_dir / "hep" / "link").exists()
 
 

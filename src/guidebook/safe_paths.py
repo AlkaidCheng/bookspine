@@ -185,7 +185,8 @@ def _read_stamp(site_dir: Path) -> list[str] | None:
 def _write_stamp(site_dir: Path, entries: list[str]) -> None:
     record = {"producer": _PRODUCER, "version": __version__, "entries": entries}
     temporary_path = site_dir / _TEMPORARY_STAMP_NAME
-    temporary_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    stamp_text = json.dumps(record, indent=2) + "\n"
+    temporary_path.write_text(stamp_text, encoding="utf-8", newline="\n")
     os.replace(temporary_path, site_dir / STAMP_NAME)
 
 

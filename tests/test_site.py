@@ -69,7 +69,9 @@ def test_every_page_has_its_file(site_dir: Path) -> None:
 def test_the_site_has_its_supporting_files(site_dir: Path) -> None:
     assert (site_dir / ".nojekyll").read_bytes() == b""
     assert (site_dir / STAMP_NAME).is_file()
-    assert "highlight" in (site_dir / "static" / "pygments.css").read_text()
+    assert "highlight" in (site_dir / "static" / "pygments.css").read_text(
+        encoding="utf-8"
+    )
     assert (site_dir / "static" / "book.js").is_file()
 
 
@@ -178,28 +180,32 @@ def test_an_override_replaces_a_template_whole(project_dir: Path) -> None:
     templates_dir = project_dir / "theme" / "templates"
     (templates_dir / "home.html").write_text("<p>{{ book.title }}</p>")
     site_dir = build_book(project_dir).site_dir
-    assert (site_dir / "index.html").read_text() == "<p>Sample Book</p>"
+    assert (site_dir / "index.html").read_text(encoding="utf-8") == "<p>Sample Book</p>"
     assert "<title>Part I: Methods" in page_text(site_dir, "methods")
 
 
 def test_a_book_static_file_is_added_and_one_replaced(site_dir: Path) -> None:
     assert (site_dir / "static" / "sample.css").is_file()
-    assert "sample" in (site_dir / "static" / "favicon.svg").read_text()
-    assert "--ink" in (site_dir / "static" / "book.css").read_text()
+    assert "sample" in (site_dir / "static" / "favicon.svg").read_text(encoding="utf-8")
+    assert "--ink" in (site_dir / "static" / "book.css").read_text(encoding="utf-8")
 
 
 def test_a_book_can_supply_its_own_code_colours(project_dir: Path) -> None:
     (project_dir / "theme" / "static" / "pygments.css").write_text("/* own */")
     site_dir = build_book(project_dir).site_dir
-    assert (site_dir / "static" / "pygments.css").read_text() == "/* own */"
+    assert (site_dir / "static" / "pygments.css").read_text(
+        encoding="utf-8"
+    ) == "/* own */"
 
 
 def test_code_colours_come_from_the_config(project_dir: Path) -> None:
     site_dir = build_book(project_dir).site_dir
-    default_css = (site_dir / "static" / "pygments.css").read_text()
+    default_css = (site_dir / "static" / "pygments.css").read_text(encoding="utf-8")
     add_to_config(project_dir, "\npygments_light: bw\npygments_dark: monokai\n")
     build_book(project_dir)
-    assert (site_dir / "static" / "pygments.css").read_text() != default_css
+    assert (site_dir / "static" / "pygments.css").read_text(
+        encoding="utf-8"
+    ) != default_css
 
 
 def test_an_unknown_colour_style_stops_the_build(project_dir: Path) -> None:
@@ -250,7 +256,7 @@ def test_a_rebuild_drops_a_removed_part(project_dir: Path) -> None:
     config_path.write_text(text[: text.index("parts:")], encoding="utf-8")
     build_book(project_dir)
     assert not (site_dir / "methods").exists()
-    assert (site_dir / "search.json").read_text() != "stale"
+    assert (site_dir / "search.json").read_text(encoding="utf-8") != "stale"
 
 
 def test_the_site_can_go_to_another_directory(
@@ -269,7 +275,7 @@ def test_a_full_folder_is_not_used_as_a_site(project_dir: Path, tmp_path: Path) 
     (other_dir / "thesis.tex").write_text("years of work")
     with pytest.raises(BuildError, match="is not empty"):
         build_book(project_dir, other_dir)
-    assert (other_dir / "thesis.tex").read_text() == "years of work"
+    assert (other_dir / "thesis.tex").read_text(encoding="utf-8") == "years of work"
 
 
 def test_a_link_to_a_full_folder_is_not_used_as_a_site(
@@ -284,7 +290,7 @@ def test_a_link_to_a_full_folder_is_not_used_as_a_site(
         pytest.skip("this system cannot make symbolic links")
     with pytest.raises(BuildError, match="is not empty"):
         build_book(project_dir)
-    assert (other_dir / "thesis.tex").read_text() == "years of work"
+    assert (other_dir / "thesis.tex").read_text(encoding="utf-8") == "years of work"
 
 
 def test_the_project_directory_is_not_used_as_a_site(project_dir: Path) -> None:
