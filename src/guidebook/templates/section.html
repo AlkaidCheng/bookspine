@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ page.number }} {{ page.title }} · {{ book.title }}{% endblock %}
+{% block content %}
+<article class="chapter">
+  <header class="chapter-head">
+    <p class="chapter-kicker"><a href="{{ page.href(page.chapter) }}">Chapter {{ page.chapter.number }} · {{ page.chapter.title }}</a></p>
+    <p class="chapter-number">{{ page.number }}</p>
+    <h1 class="chapter-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="lede">{{ page.summary }}</p>{% endif %}
+    {% if page.status %}
+    <p class="status-note">This section is {{ page.status | replace('-', ' ') }}. Its outline is settled; the text is still being written.</p>
+    {% endif %}
+    {% set numbered = page.sections | selectattr("level", "equalto", 2) | selectattr("number") | list %}
+    {% if numbered | length > 1 %}
+    <nav class="in-this-chapter" aria-label="Subsections">
+      <p class="itc-label">In this section</p>
+      <ol>
+        {% for s in numbered %}
+        <li><a href="#{{ s.id }}"><span class="toc-num">{{ s.number }}</span> {{ s.title }}</a></li>
+        {% endfor %}
+      </ol>
+    </nav>
+    {% endif %}
+  </header>
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+</article>
+{% endblock %}

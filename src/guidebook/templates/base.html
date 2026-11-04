@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-root="{{ page.root }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ page.title }} · {{ book.title }}{% endblock %}</title>
+{% if page.summary %}<meta name="description" content="{{ page.summary }}">{% endif %}
+<meta name="author" content="{{ book.author }}">
+<link rel="icon" href="{{ page.root }}static/favicon.svg" type="image/svg+xml">
+<script>
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="{{ page.root }}static/pygments.css">
+<link rel="stylesheet" href="{{ page.root }}static/book.css">
+<script>
+window.MathJax = {
+  loader: { load: ["[tex]/tagformat", "[tex]/ams", "[tex]/boldsymbol"] },
+  tex: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    tags: "all",
+    packages: { "[+]": ["tagformat", "ams", "boldsymbol"] },
+    tagformat: {
+      number: function (n) {
+        var chapter = document.body.getAttribute("data-chapter");
+        var number = n + Number(document.body.getAttribute("data-equation-offset"));
+        return chapter ? chapter + "." + number : String(number);
+      }
+    },
+    {% if book.mathjax_macros %}
+    macros: {
+      {% for name, definition in book.mathjax_macros.items() %}
+      {{ name }}: {{ definition | tojson }}{{ "," if not loop.last else "" }}
+      {% endfor %}
+    }
+    {% endif %}
+  },
+  options: { ignoreHtmlClass: "highlight|nomath" },
+  chtml: { scale: 0.98 }
+};
+</script>
+<script defer src="{{ mathjax_url }}"></script>
+{% block extra_head %}{% endblock %}
+</head>
+<body{% if page.chapter_number %} data-chapter="{{ page.chapter_number }}"{% endif %}{% if page.equation_offset %} data-equation-offset="{{ page.equation_offset }}"{% endif %}{% if not book.enlarge_tables %} data-enlarge-tables="false"{% endif %} class="kind-{{ page.kind }}">
+<a class="skip" href="#content">Skip to content</a>
+
+<header class="topbar">
+  <button class="iconbtn menu" type="button" aria-label="Open contents" aria-controls="sidebar" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+  <a class="brand" href="{{ page.root }}">{{ book.title }}</a>
+  <div class="running-head">
+    {% if page.chapter_number %}
+      <span class="rh-part">Part {{ page.part.number }} · {{ page.part.title }}</span>
+      <span class="rh-sep">/</span>
+      <span class="rh-chapter">Chapter {{ page.chapter_number }}</span>
+    {% elif page.kind == "part" %}
+      <span class="rh-part">Part {{ page.number }}</span>
+    {% endif %}
+  </div>
+  <div class="tools">
+    <button class="iconbtn search-open" type="button" aria-label="Search the book" title="Search (press /)">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <button class="iconbtn theme-toggle" type="button" aria-label="Toggle colour scheme" title="Light / dark">
+      <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Book contents">
+    <div class="sidebar-inner">
+      <a class="toc-home{% if page.kind == 'home' %} active{% endif %}" href="{{ page.root }}">Contents</a>
+      {% for part in parts %}
+      <section class="toc-part{% if page == part or page.part == part %} current{% endif %}">
+        <a class="toc-part-link{% if page == part %} active{% endif %}" href="{{ page.href(part) }}">
+          <span class="toc-roman">Part {{ part.number }}</span>
+          <span class="toc-part-title">{{ part.title }}</span>
+        </a>
+        <ol class="toc-chapters">
+          {% for chapter in part.chapters %}
+          <li class="{% if chapter == page or chapter == page.chapter %}active{% endif %}">
+            <a href="{{ page.href(chapter) }}">
+              <span class="toc-num">{{ chapter.number }}</span>
+              <span class="toc-title">{{ chapter.title }}</span>
+              {% if chapter.status %}<span class="toc-status" title="{{ chapter.status | replace('-', ' ') | capitalize }}"></span>{% endif %}
+            </a>
+            {% if chapter.section_pages and (chapter == page or chapter == page.chapter) %}
+            <ol class="toc-sections">
+              {% for section in chapter.section_pages %}
+              <li{% if section == page %} class="active"{% endif %}>
+                <a href="{{ page.href(section) }}"><span class="toc-num">{{ section.number }}</span><span class="toc-title">{{ section.title }}</span></a>
+                {% if section == page and page.sections %}
+                <ol class="toc-sections toc-subsections">
+                  {% for s in page.sections if s.level == 2 and s.number %}
+                  <li><a href="#{{ s.id }}"><span class="toc-num">{{ s.number }}</span><span class="toc-title">{{ s.title }}</span></a></li>
+                  {% endfor %}
+                </ol>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ol>
+            {% elif chapter == page and page.sections %}
+            <ol class="toc-sections">
+              {% for s in page.sections if s.level == 2 %}
+              <li{% if not s.number %} class="unnumbered"{% endif %}><a href="#{{ s.id }}">{% if s.number %}<span class="toc-num">{{ s.number }}</span>{% endif %}<span class="toc-title">{{ s.title }}</span></a></li>
+              {% endfor %}
+            </ol>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endfor %}
+      {% if book.repo %}
+      <div class="sidebar-foot">
+        <a href="{{ book.repo }}" class="external" rel="noopener">Source on {{ book.repo_host }}</a>
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+  <div class="scrim" hidden></div>
+
+  <main class="content" id="content">
+    {% block content %}{% endblock %}
+
+    {% if page.prev or page.next %}
+    <nav class="pagenav" aria-label="Previous and next">
+      {% if page.prev %}
+      <a class="pagenav-prev" href="{{ page.href(page.prev) }}">
+        <span class="pagenav-label">Previous</span>
+        <span class="pagenav-title">{% if page.prev.kind == 'chapter' %}{{ page.prev.number }}. {% elif page.prev.kind == 'section' %}{{ page.prev.number }} {% elif page.prev.kind == 'part' %}Part {{ page.prev.number }}: {% endif %}{{ page.prev.title }}</span>
+      </a>
+      {% else %}<span></span>{% endif %}
+      {% if page.next %}
+      <a class="pagenav-next" href="{{ page.href(page.next) }}">
+        <span class="pagenav-label">Next</span>
+        <span class="pagenav-title">{% if page.next.kind == 'chapter' %}{{ page.next.number }}. {% elif page.next.kind == 'section' %}{{ page.next.number }} {% elif page.next.kind == 'part' %}Part {{ page.next.number }}: {% endif %}{{ page.next.title }}</span>
+      </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    <footer class="colophon">
+      <span>{{ book.title }} · {{ book.author }} · Revised {{ build_date }}</span>
+      {% if book.edit_url %}
+      <span><a href="{{ book.edit_url }}{{ page.source_path.as_posix() }}" class="external" rel="noopener">Edit this page</a></span>
+      {% endif %}
+    </footer>
+  </main>
+</div>
+
+<div class="search" hidden>
+  <div class="search-panel" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="search-row">
+      <input class="search-input" type="search" placeholder="Search the book…" autocomplete="off" spellcheck="false">
+      <button class="iconbtn search-close" type="button" aria-label="Close search">&#x2715;</button>
+    </div>
+    <ol class="search-results"></ol>
+    <p class="search-hint">Type to search chapter and section text. <kbd>Esc</kbd> closes.</p>
+  </div>
+</div>
+
+<script src="{{ page.root }}static/book.js" defer></script>
+</body>
+</html>
