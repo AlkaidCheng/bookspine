@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ page.number }}. {{ page.title }} · {{ book.title }}{% endblock %}
+{% block content %}
+<article class="chapter">
+  <header class="chapter-head">
+    <p class="chapter-kicker">Chapter</p>
+    <p class="chapter-number">{{ page.number }}</p>
+    <h1 class="chapter-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="lede">{{ page.summary }}</p>{% endif %}
+    {% if page.status %}
+    <p class="status-note">This chapter is {{ page.status | replace('-', ' ') }}. Its outline is settled; the text is still being written.</p>
+    {% endif %}
+    {% set numbered = page.sections | selectattr("level", "equalto", 2) | selectattr("number") | list %}
+    {% if numbered | length > 1 %}
+    <nav class="in-this-chapter" aria-label="Sections">
+      <p class="itc-label">In this chapter</p>
+      <ol>
+        {% for s in numbered %}
+        <li><a href="#{{ s.id }}"><span class="toc-num">{{ s.number }}</span> {{ s.title }}</a></li>
+        {% endfor %}
+      </ol>
+    </nav>
+    {% endif %}
+  </header>
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+  {% if page.section_pages %}
+  <section class="part-contents">
+    <h2 class="unnumbered" id="sections">Sections</h2>
+    <ol class="chapter-list">
+      {% for section in page.section_pages %}
+      <li>
+        <a href="{{ page.href(section) }}">
+          <span class="chapter-list-num">{{ section.number }}</span>
+          <span class="chapter-list-body">
+            <span class="chapter-list-title">{{ section.title }}{% if section.status %} <span class="badge">{{ section.status | replace('-', ' ') }}</span>{% endif %}</span>
+            {% if section.summary %}<span class="chapter-list-summary">{{ section.summary }}</span>{% endif %}
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

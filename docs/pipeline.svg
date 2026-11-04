@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 150" role="img" aria-label="The build reads book.yaml and the Markdown files, converts them to HTML, numbers and resolves, puts each page into its template, and writes the site.">
+  <title>guidebook build pipeline</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #475569; stroke-width: 1.5; }
+      .step { font: 600 15px sans-serif; fill: #0f172a; text-anchor: middle; }
+      .detail { font: 12px sans-serif; fill: #334155; text-anchor: middle; }
+      .link { stroke: #475569; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect class="box" x="10" y="25" width="140" height="100" rx="6"/>
+  <text class="step" x="80" y="62">Read</text>
+  <text class="detail" x="80" y="84">book.yaml and</text>
+  <text class="detail" x="80" y="100">Markdown pages</text>
+
+  <rect class="box" x="185" y="25" width="140" height="100" rx="6"/>
+  <text class="step" x="255" y="62">Convert</text>
+  <text class="detail" x="255" y="84">Markdown</text>
+  <text class="detail" x="255" y="100">to HTML</text>
+
+  <rect class="box" x="360" y="25" width="140" height="100" rx="6"/>
+  <text class="step" x="430" y="62">Number</text>
+  <text class="detail" x="430" y="84">counts, citations,</text>
+  <text class="detail" x="430" y="100">links, search index</text>
+
+  <rect class="box" x="535" y="25" width="140" height="100" rx="6"/>
+  <text class="step" x="605" y="62">Theme</text>
+  <text class="detail" x="605" y="84">templates and</text>
+  <text class="detail" x="605" y="100">static files</text>
+
+  <rect class="box" x="710" y="25" width="140" height="100" rx="6"/>
+  <text class="step" x="780" y="62">Write</text>
+  <text class="detail" x="780" y="84">replaces the last</text>
+  <text class="detail" x="780" y="100">build in site/</text>
+
+  <line class="link" x1="150" y1="75" x2="183" y2="75"/>
+  <line class="link" x1="325" y1="75" x2="358" y2="75"/>
+  <line class="link" x1="500" y1="75" x2="533" y2="75"/>
+  <line class="link" x1="675" y1="75" x2="708" y2="75"/>
+</svg>

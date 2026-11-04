@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Part {{ page.number }}: {{ page.title }} · {{ book.title }}{% endblock %}
+{% block content %}
+<article class="part">
+  <header class="part-head">
+    <p class="chapter-kicker">Part {{ page.number }}</p>
+    <h1 class="part-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="lede">{{ page.summary }}</p>{% endif %}
+  </header>
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+  <section class="part-contents">
+    <h2 class="unnumbered" id="chapters">Chapters</h2>
+    <ol class="chapter-list">
+      {% for chapter in page.chapters %}
+      <li>
+        <a href="{{ page.href(chapter) }}">
+          <span class="chapter-list-num">{{ chapter.number }}</span>
+          <span class="chapter-list-body">
+            <span class="chapter-list-title">{{ chapter.title }}{% if chapter.status %} <span class="badge">{{ chapter.status | replace('-', ' ') }}</span>{% endif %}</span>
+            {% if chapter.summary %}<span class="chapter-list-summary">{{ chapter.summary }}</span>{% endif %}
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</article>
+{% endblock %}

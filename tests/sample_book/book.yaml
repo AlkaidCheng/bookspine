@@ -1,0 +1,22 @@
+title: Sample Book
+subtitle: A book that uses every feature
+kicker: Test fixture
+author: A. Author
+url: https://example.org/sample/
+repo: https://example.org/sample-repo
+repo_host: ExampleHost
+edit_url: https://example.org/sample-repo/edit/
+
+mathjax_macros:
+  dd: \mathrm{d}
+  vec: ['\boldsymbol{#1}', 1]
+
+parts:
+  - dir: methods
+    title: Methods
+    chapters:
+      - basics.md
+      - dir: split
+        sections:
+          - first.md
+          - second.md

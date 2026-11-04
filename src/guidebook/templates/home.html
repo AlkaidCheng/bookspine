@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<article class="home">
+  <header class="title-page">
+    <p class="title-kicker">{{ book.kicker }}</p>
+    <h1 class="book-title">{{ book.title }}</h1>
+    {% if book.subtitle %}<p class="book-subtitle">{{ book.subtitle }}</p>{% endif %}
+    <p class="book-author">{{ book.author }}</p>
+    <p class="book-edition">Living edition · revised {{ build_date }}</p>
+  </header>
+
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+
+  <section class="contents" id="contents">
+    <h2 class="unnumbered">Contents</h2>
+    {% for part in parts %}
+    <div class="contents-part">
+      <a class="contents-part-link" href="{{ page.href(part) }}">
+        <span class="toc-roman">Part {{ part.number }}</span>
+        <span class="contents-part-title">{{ part.title }}</span>
+      </a>
+      <ol class="chapter-list">
+        {% for chapter in part.chapters %}
+        <li>
+          <a href="{{ page.href(chapter) }}">
+            <span class="chapter-list-num">{{ chapter.number }}</span>
+            <span class="chapter-list-body">
+              <span class="chapter-list-title">{{ chapter.title }}{% if chapter.status %} <span class="badge">{{ chapter.status | replace('-', ' ') }}</span>{% endif %}</span>
+              {% if chapter.summary %}<span class="chapter-list-summary">{{ chapter.summary }}</span>{% endif %}
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endfor %}
+  </section>
+</article>
+{% endblock %}
