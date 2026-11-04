@@ -138,6 +138,29 @@ reference list is generated at the end of the page, in order of first citation.
 | `warning`, `caution`, `note`, `tip` | Labelled, with no number. |
 | Any other, such as `summary` | Styled by its own name, with its title as written. |
 
+## Exporting
+
+Every table, figure, code block, display equation and box has a button at its top
+right, shown on hover, that opens a menu of file formats.
+
+| Component | Formats |
+|---|---|
+| Table | Markdown, CSV, LaTeX, PNG, PDF |
+| SVG figure | SVG, PNG, PDF |
+| Other figure | PNG, PDF |
+| Code block | Source file, PNG, PDF |
+| Display equation | LaTeX, PNG, PDF |
+| Box | PNG, PDF |
+
+Exports use the light colour scheme on a white background. Markdown and LaTeX keep a
+table's caption, and images and PDFs leave it out. The text formats can also be copied
+to the clipboard. LaTeX output defines the book's macros it uses, and states the
+packages it needs.
+
+PDF opens the browser's print dialog with the page sized to the component, which keeps
+vectors and fonts: choose "Save as PDF" there. A browser that ignores the page size
+prints on its default paper.
+
 ## Configuration
 
 `book.yaml` takes the keys below, and an unknown key stops the build.
@@ -152,6 +175,7 @@ reference list is generated at the end of the page, in order of first citation.
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
 | `parts` | empty | The parts and chapters, as above. |
 | `enlarge_tables` | `true` | Whether clicking a table opens it enlarged. Figures always do. |
+| `export_menus` | `true` | Whether tables, figures, code, equations and boxes offer an [export menu](#exporting). |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 
