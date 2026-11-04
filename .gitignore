@@ -1,0 +1,36 @@
+# ---- Build output --------------------------------------------------------
+/dist/
+/site/
+/tests/sample_book/site/
+
+# ---- Python --------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# ---- Editors and IDEs ----------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- OS junk -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Claude Code ---------------------------------------------------------
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+
+# ---- Codex ---------------------------------------------------------------
+.codex/
+.agents/
+AGENTS.md
+AGENTS.local.md

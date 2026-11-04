@@ -1,0 +1,2 @@
+# Keep LF in every checkout, so the theme files in a wheel are the same on all systems.
+* text=auto eol=lf
