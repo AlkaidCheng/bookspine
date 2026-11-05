@@ -128,7 +128,9 @@ written inside them.
 ### Citations
 
 `[@key]` cites an entry of the page's `references`, and `[@a; @b]` cites several. The
-reference list is generated at the end of the page, in order of first citation.
+reference list is generated at the end of the page, in order of first citation. A link
+that shows its own address, such as `<https://example.org/a/long/path>`, wraps between
+the address's elements with no hyphen added, so a long one fits a phone's screen.
 
 ### Boxes
 

@@ -2,7 +2,7 @@
 title: Basics
 summary: Every numbered element on one page.
 references:
-  first-paper: A. Author, *A title*, Journal **1** (2020) 1.
+  first-paper: A. Author, *A title*, Journal **1** (2020) 1, <https://example.org/journal/2020/first_paper.html>.
 ---
 
 Text with a citation [@first-paper] and a link to
