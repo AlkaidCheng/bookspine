@@ -39,6 +39,12 @@ _TAG_PATTERN = re.compile(r"<[^>]+>")
 _EXTERNAL_LINK_PATTERN = re.compile(
     r'<a href="(https?://[^"]+)" class="external" rel="noopener">([^<\s]+)</a>'
 )
+_CODE_BLOCK_PATTERN = re.compile(
+    r'(<div class="highlight">(?:<span class="filename">[^<]*</span>)?'
+    r"<pre><span></span><code>)(.*?)(</code></pre>)",
+    re.S,
+)
+_CODE_LINE_PATTERN = re.compile(r".*\n|.+")
 _URL_SCHEME_PATTERN = re.compile(r"https?://")
 # After a colon, a double slash, an equals sign or an ampersand, and before a single
 # slash or other punctuation, as The Chicago Manual of Style has it in 7.46, "Dividing
@@ -339,6 +345,30 @@ def break_bare_urls(page: Page) -> None:
         )
 
     page.body_html = _EXTERNAL_LINK_PATTERN.sub(replace, page.body_html)
+
+
+def split_code_lines(page: Page) -> None:
+    """Put each line of a code block in the ``.line`` span that wraps it.
+
+    The span records the line's indentation, which a continuation goes past, so a
+    wrapped line reads apart from the next one. Each newline stays in its span, which
+    leaves the block's text and a selection of it as they were. A block with line
+    numbers is left alone: a wrapped line would lose its place beside its number.
+    """
+
+    def line_span(line: str) -> str:
+        text = _TAG_PATTERN.sub("", line)
+        indent = len(text) - len(text.lstrip(" "))
+        style = f' style="--indent:{indent}"' if indent else ""
+        return f'<span class="line"{style}>{line}</span>'
+
+    def replace(match: re.Match[str]) -> str:
+        # Pygments closes the span of a line marked by hl_lines after its newline.
+        code = match.group(2).replace("\n</span>", "</span>\n")
+        lines = "".join(map(line_span, _CODE_LINE_PATTERN.findall(code)))
+        return f"{match.group(1)}{lines}{match.group(3)}"
+
+    page.body_html = _CODE_BLOCK_PATTERN.sub(replace, page.body_html)
 
 
 def search_entries(page: Page) -> list[dict[str, str]]:

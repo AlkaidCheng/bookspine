@@ -37,6 +37,7 @@ from guidebook.passes import (
     resolve_citations,
     rewrite_links,
     search_entries,
+    split_code_lines,
 )
 from guidebook.safe_paths import replace_site, require_site_dir
 
@@ -133,7 +134,9 @@ def build_book(
     )
     config = load_config(project.config_path)
     pages = load_pages(config, project.book_dir)
-    converted = convert_pages(pages, project.book_dir, config.glossary)
+    converted = convert_pages(
+        pages, project.book_dir, config.glossary, config.wrap_code
+    )
     replace_site(project.site_dir, site_files(project, config, pages, converted))
     return BuildResult(
         site_dir=project.site_dir,
@@ -152,7 +155,10 @@ def make_markdown() -> markdown.Markdown:
 
 
 def convert_pages(
-    pages: list[Page], book_dir: Path, has_glossary: bool = True
+    pages: list[Page],
+    book_dir: Path,
+    has_glossary: bool = True,
+    wrap_code: bool = True,
 ) -> ConvertedPages:
     """Turn every page's Markdown into numbered, linked HTML.
 
@@ -165,6 +171,8 @@ def convert_pages(
         The book's sources.
     has_glossary : bool, optional
         Whether ``\\glossary`` tags make glossary pages.
+    wrap_code : bool, optional
+        Whether a long line of code wraps instead of scrolling.
 
     Raises
     ------
@@ -190,6 +198,8 @@ def convert_pages(
         converted.search_index += search_entries(page)
         # After the search text, which would otherwise split at every <wbr>.
         break_bare_urls(page)
+        if wrap_code:
+            split_code_lines(page)
 
     last_page = next(page for page in reversed(pages) if page.kind != "help")
     for glossary_page in make_glossary_pages(pages) if has_glossary else []:

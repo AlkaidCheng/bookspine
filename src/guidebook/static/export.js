@@ -265,7 +265,14 @@
     copy.removeAttribute("tabindex");
     holder.appendChild(copy);
     stage.appendChild(holder);
-    stage.style.width = Math.max(target.getBoundingClientRect().width, target.scrollWidth) + "px";
+    var width = Math.max(target.getBoundingClientRect().width, target.scrollWidth) + "px";
+    if (component.kind === "code") {
+      // A code block keeps its source's lines, however it wraps on the page.
+      stage.style.width = "max-content";
+      stage.style.minWidth = width;
+    } else {
+      stage.style.width = width;
+    }
     document.body.appendChild(stage);
     return stage;
   }

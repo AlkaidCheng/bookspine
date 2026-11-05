@@ -196,7 +196,8 @@ left of an equation. A code block also has a button that copies its source in on
 | Display equation | LaTeX, PNG, PDF |
 
 Exports use the light colour scheme on a white background. Markdown and LaTeX keep a
-table's caption, and images and PDFs leave it out. Every format except PDF can also be
+table's caption, and images and PDFs leave it out. A code block keeps its source's
+lines, however it wraps on the page. Every format except PDF can also be
 copied to the clipboard. LaTeX output defines the book's macros it uses, and states the
 packages it needs.
 
@@ -221,6 +222,7 @@ prints on its default paper.
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
+| `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 

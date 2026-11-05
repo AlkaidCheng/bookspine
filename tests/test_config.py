@@ -31,6 +31,7 @@ def test_defaults_fill_every_optional_key(tmp_path: Path) -> None:
     assert config.parts == ()
     assert config.enlarge_tables is True
     assert config.export_menus is True
+    assert config.wrap_code is True
     assert config.help_page == ""
     assert config.mathjax_macros == {}
     assert config.pygments_light == DEFAULT_PYGMENTS_LIGHT
@@ -95,6 +96,7 @@ def test_macros_keep_their_order_and_definitions(tmp_path: Path) -> None:
         ({"repo": "https://example.org"}, "repo needs a repo_host"),
         ({"enlarge_tables": "no"}, "enlarge_tables must be true or false"),
         ({"export_menus": 1}, "export_menus must be true or false"),
+        ({"wrap_code": "yes"}, "wrap_code must be true or false"),
         ({"mathjax_macros": ["dd"]}, "mathjax_macros must be a mapping"),
         ({"mathjax_macros": {"d d": "x"}}, "not a TeX macro name"),
         ({"mathjax_macros": {"dd": 3}}, "macro dd must be"),
