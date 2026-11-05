@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from guidebook.config import SEARCH_TEXT_LIMIT
+from guidebook.converter import convert_markdown
 from guidebook.errors import BuildError
 from guidebook.pages import Page
 from guidebook.passes import (
@@ -23,7 +24,6 @@ from guidebook.passes import (
     split_code_lines,
     url_with_breaks,
 )
-from guidebook.site import make_markdown
 
 
 def make_page(body_html: str = "", **fields: Any) -> Page:
@@ -154,7 +154,7 @@ def test_other_boxes_are_left_alone() -> None:
 def test_citations_are_numbered_by_first_use() -> None:
     meta = {"references": {"a": "Paper *A*", "b": "Paper B"}}
     page = make_page("<p>[@b] and [@a; @b]</p>", meta=meta)
-    assert resolve_citations(page, make_markdown()) == []
+    assert resolve_citations(page) == []
     assert '<a class="cite" href="#ref-b">1</a>' in page.body_html
     assert '<a class="cite" href="#ref-a">2</a>, ' in page.body_html
     assert '<li id="ref-a">Paper <em>A</em></li>' in page.body_html
@@ -163,25 +163,25 @@ def test_citations_are_numbered_by_first_use() -> None:
 def test_an_unknown_citation_fails() -> None:
     page = make_page("<p>[@a]</p>")
     with pytest.raises(BuildError, match=r"citation \[@a\] has no entry"):
-        resolve_citations(page, make_markdown())
+        resolve_citations(page)
 
 
 def test_an_uncited_reference_warns() -> None:
     page = make_page("<p>Text</p>", meta={"references": {"a": "Paper"}})
-    (warning,) = resolve_citations(page, make_markdown())
+    (warning,) = resolve_citations(page)
     assert "references never cited: a" in warning
 
 
 def test_citations_in_code_stay_as_written() -> None:
     page = make_page("<code>[@a]</code>")
-    resolve_citations(page, make_markdown())
+    resolve_citations(page)
     assert page.body_html == "<code>[@a]</code>"
 
 
 def test_references_must_be_a_mapping() -> None:
     page = make_page("<p>Text</p>", meta={"references": ["a"]})
     with pytest.raises(BuildError, match="must be a mapping"):
-        resolve_citations(page, make_markdown())
+        resolve_citations(page)
 
 
 def test_a_markdown_link_becomes_a_site_url(tmp_path: Path) -> None:
@@ -303,8 +303,7 @@ def test_an_address_with_nothing_to_break_on_is_kept_whole() -> None:
 
 
 def code_page(source: str) -> Page:
-    md = make_markdown()
-    return make_page(md.convert(source))
+    return make_page(convert_markdown(source))
 
 
 def code_text(page: Page) -> str:
@@ -328,7 +327,6 @@ def test_each_line_of_code_gets_a_span_with_its_indentation() -> None:
     [
         "```python\nx = 1\n\n\ny = 2\n```\n",
         '```python\nx = """a\n  b\n"""\n```\n',
-        '```python hl_lines="2"\nx = 1\ny = 2\nz = 3\n```\n',
         "```\n  a < b && c\n```\n",
         "    indented\n      more\n",
     ],
@@ -353,19 +351,6 @@ def test_each_newline_stays_inside_its_line() -> None:
         '<code><span class="line">a\n</span><span class="line">\n</span>'
         '<span class="line">b\n</span></code>'
     ) in page.body_html
-
-
-def test_a_block_with_a_title_is_split() -> None:
-    page = code_page('```python title="a.py"\nx = 1\n```\n')
-    split_code_lines(page)
-    assert 'class="line"' in page.body_html
-
-
-def test_a_block_with_line_numbers_is_left_alone() -> None:
-    page = code_page('```python linenums="1"\nx = 1\n```\n')
-    before = page.body_html
-    split_code_lines(page)
-    assert page.body_html == before
 
 
 def test_inline_code_is_left_alone() -> None:

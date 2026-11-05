@@ -4,26 +4,24 @@ import datetime as dt
 import json
 import os
 import re
-import sys
 from dataclasses import dataclass, field
 from importlib import resources
+from importlib.resources.abc import Traversable
 from pathlib import Path
 
 import jinja2
-import markdown
 from pygments.formatters import HtmlFormatter
 from pygments.util import ClassNotFound
 
 from guidebook.config import (
     BUILD_DATE_FORMAT,
-    MARKDOWN_EXTENSION_CONFIGS,
-    MARKDOWN_EXTENSIONS,
     STATIC_DIR_NAME,
     TEMPLATES_DIR_NAME,
     BookConfig,
     Project,
     load_config,
 )
+from guidebook.converter import convert_markdown
 from guidebook.equations import (
     MATHJAX_URL,
     needs_mathjax,
@@ -32,7 +30,6 @@ from guidebook.equations import (
 )
 from guidebook.errors import BuildError
 from guidebook.glossary import collect_terms, make_glossary_pages
-from guidebook.inline import skip_impossible_patterns
 from guidebook.pages import Page, load_pages
 from guidebook.passes import (
     break_bare_urls,
@@ -46,11 +43,6 @@ from guidebook.passes import (
     split_code_lines,
 )
 from guidebook.safe_paths import replace_site, require_site_dir
-
-if sys.version_info >= (3, 11):
-    from importlib.resources.abc import Traversable
-else:
-    from importlib.abc import Traversable
 
 # Names in the package and in the site.
 PACKAGE_NAME = "guidebook"
@@ -153,15 +145,6 @@ def build_book(
     )
 
 
-def make_markdown() -> markdown.Markdown:
-    """Return the converter every page goes through."""
-    md = markdown.Markdown(
-        extensions=MARKDOWN_EXTENSIONS, extension_configs=MARKDOWN_EXTENSION_CONFIGS
-    )
-    skip_impossible_patterns(md)
-    return md
-
-
 def convert_pages(
     pages: list[Page],
     book_dir: Path,
@@ -188,19 +171,17 @@ def convert_pages(
         If a link, figure, citation or equation reference does not resolve, or a
         glossary tag cannot be read.
     """
-    md = make_markdown()
     pages_by_source = {page.source_path: page for page in pages}
     equation_labels: dict[str, tuple[Page, str]] = {}
     converted = ConvertedPages()
     for page in pages:
-        page.body_html = md.convert(page.body_md)
-        md.reset()
+        page.body_html = convert_markdown(page.body_md)
         number_headings(page)
         number_figures_and_tables(page, book_dir)
         number_boxes(page)
         number_equations(page, equation_labels)
         collect_terms(page)
-        converted.warnings += resolve_citations(page, md)
+        converted.warnings += resolve_citations(page)
         rewrite_links(page, pages_by_source, converted.assets, book_dir)
         mark_external_links(page)
         converted.search_index += search_entries(page)
@@ -239,7 +220,7 @@ def build_date() -> dt.date:
             f"{SOURCE_DATE_EPOCH_VARIABLE} is not a Unix time: {epoch_text}"
         )
     try:
-        return dt.datetime.fromtimestamp(int(epoch_text), dt.timezone.utc).date()
+        return dt.datetime.fromtimestamp(int(epoch_text), dt.UTC).date()
     except (OverflowError, OSError, ValueError):
         raise BuildError(
             f"{SOURCE_DATE_EPOCH_VARIABLE} is out of range: {epoch_text}"

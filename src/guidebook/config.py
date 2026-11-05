@@ -11,6 +11,7 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+import pyromark
 import yaml
 
 from guidebook.errors import BuildError
@@ -29,37 +30,16 @@ OPENER_NAME = "index.md"
 DEFAULT_PYGMENTS_LIGHT = "friendly"
 DEFAULT_PYGMENTS_DARK = "github-dark"
 
-# The extensions behind the book's Markdown, each documented at
-# https://python-markdown.github.io/extensions/ and
-# https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/
-MARKDOWN_EXTENSIONS = [
-    "abbr",
-    "admonition",
-    "attr_list",
-    "def_list",
-    "footnotes",
-    "md_in_html",
-    "smarty",
-    "tables",
-    "toc",
-    "pymdownx.arithmatex",
-    "pymdownx.betterem",
-    "pymdownx.details",
-    "pymdownx.highlight",
-    "pymdownx.inlinehilite",
-    "pymdownx.keys",
-    "pymdownx.superfences",
-]
-MARKDOWN_EXTENSION_CONFIGS: dict[str, dict[str, Any]] = {
-    "toc": {"toc_depth": "2-3", "permalink": False},
-    "footnotes": {
-        "PLACE_MARKER": "<!-- footnotes -->",
-        "BACKLINK_TITLE": "Back to text",
-    },
-    "pymdownx.arithmatex": {"generic": True},
-    "pymdownx.highlight": {"css_class": "highlight", "guess_lang": False},
-    "smarty": {"smart_angled_quotes": False},
-}
+# What pyromark reads beyond CommonMark, each option documented at
+# https://monosans.github.io/pyromark/
+MARKDOWN_OPTIONS = (
+    pyromark.Options.ENABLE_DEFINITION_LIST
+    | pyromark.Options.ENABLE_FOOTNOTES
+    | pyromark.Options.ENABLE_HEADING_ATTRIBUTES
+    | pyromark.Options.ENABLE_MATH
+    | pyromark.Options.ENABLE_SMART_PUNCTUATION
+    | pyromark.Options.ENABLE_TABLES
+)
 
 # Boxed environments that receive a running number within the chapter. Their names
 # are this theme's convention: book.css styles each one.
