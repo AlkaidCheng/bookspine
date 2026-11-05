@@ -29,16 +29,35 @@ _ROMAN_NUMERALS = (
 )
 
 
+@dataclass
+class GlossaryEntry:
+    """One reference in the glossary.
+
+    Parameters
+    ----------
+    name : str
+        The name of the term or equation, as plain text.
+    anchor : str
+        The id the reference links to, on the page it comes from.
+    locator : str
+        Where it stands there, such as ``Definition 1.2``.
+    """
+
+    name: str
+    anchor: str
+    locator: str
+
+
 # Pages are compared by identity: the templates ask whether a page is the current one,
 # and the fields link pages to one another.
 @dataclass(eq=False)
 class Page:
-    """One output page: the home page, a part opener, a chapter or a chapter's section.
+    """One output page: home, a part opener, a chapter, a section or the glossary.
 
     Parameters
     ----------
     kind : str
-        ``"home"``, ``"part"``, ``"chapter"`` or ``"section"``.
+        ``"home"``, ``"part"``, ``"chapter"``, ``"section"`` or ``"glossary"``.
     source_path : Path
         The Markdown source, relative to ``book/``.
     url : str
@@ -62,6 +81,8 @@ class Page:
         chapter's pages.
     equation_offset : int
         Equations numbered on the chapter's earlier pages.
+    terms, named_equations : list of GlossaryEntry
+        The glossary entries the page defines.
     body_html : str
         The page's HTML, built up by the passes.
     prev, next : Page or None
@@ -82,6 +103,8 @@ class Page:
     sections: list[dict[str, Any]] = field(default_factory=list)
     counters: dict[str, int] = field(default_factory=dict)
     equation_offset: int = 0
+    terms: list[GlossaryEntry] = field(default_factory=list)
+    named_equations: list[GlossaryEntry] = field(default_factory=list)
     body_html: str = ""
     prev: "Page | None" = None
     next: "Page | None" = None

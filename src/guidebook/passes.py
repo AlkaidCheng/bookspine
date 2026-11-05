@@ -17,7 +17,7 @@ from guidebook.config import (
 from guidebook.errors import BuildError
 from guidebook.pages import Page
 
-_CODE_SEGMENT_PATTERN = re.compile(r"(<pre.*?</pre>|<code.*?</code>)", re.S)
+CODE_SEGMENT_PATTERN = re.compile(r"(<pre.*?</pre>|<code.*?</code>)", re.S)
 _HEADING_PATTERN = re.compile(r'<h([23]) id="([^"]+)">(.*?)</h\1>', re.S)
 _FIGURE_PATTERN = re.compile(r"<p>(<img [^>]*>)</p>")
 _TABLE_CAPTION_PATTERN = re.compile(
@@ -40,7 +40,7 @@ _TAG_PATTERN = re.compile(r"<[^>]+>")
 
 def outside_code(text: str, transform: Callable[[str], str]) -> str:
     """Apply `transform` to the parts of `text` that are not code."""
-    segments = _CODE_SEGMENT_PATTERN.split(text)
+    segments = CODE_SEGMENT_PATTERN.split(text)
     return "".join(
         segment if index % 2 else transform(segment)
         for index, segment in enumerate(segments)

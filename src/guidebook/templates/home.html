@@ -37,6 +37,25 @@
       </ol>
     </div>
     {% endfor %}
+    {% if glossary_page %}
+    <div class="contents-part">
+      <a class="contents-part-link" href="{{ page.href(glossary_page) }}">
+        <span class="contents-part-title">{{ glossary_page.title }}</span>
+      </a>
+      <ol class="chapter-list unnumbered">
+        {% for entry in glossary_page.chapters %}
+        <li>
+          <a href="{{ page.href(entry) }}">
+            <span class="chapter-list-body">
+              <span class="chapter-list-title">{{ entry.title }}</span>
+              <span class="chapter-list-summary">{{ entry.summary }}</span>
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
   </section>
 </article>
 {% endblock %}

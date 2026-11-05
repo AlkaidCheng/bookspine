@@ -84,6 +84,19 @@ UNNUMBERED_HEADINGS = {"references", "further reading"}
 # The characters of a section's text kept in the search index.
 SEARCH_TEXT_LIMIT = 1200
 
+# The generated glossary: an opener, as a part has, and a page for each kind of entry.
+GLOSSARY_TITLE = "Glossary"
+GLOSSARY_SUMMARY = "Find where this book defines a term or states an equation."
+GLOSSARY_URL = "glossary/"
+GLOSSARY_TERMS_TITLE = "Terms"
+GLOSSARY_TERMS_NOUN = "term"
+GLOSSARY_TERMS_SUMMARY = "{count} defined in this book."
+GLOSSARY_TERMS_URL = "glossary/terms/"
+GLOSSARY_EQUATIONS_TITLE = "Equations"
+GLOSSARY_EQUATIONS_NOUN = "equation"
+GLOSSARY_EQUATIONS_SUMMARY = "{count} named in this book."
+GLOSSARY_EQUATIONS_URL = "glossary/equations/"
+
 # How the title page and footer print the date, in the notation of
 # https://docs.python.org/3/library/datetime.html#format-codes
 BUILD_DATE_FORMAT = "%B %Y"
@@ -101,7 +114,7 @@ _TEXT_KEYS = (
     "pygments_light",
     "pygments_dark",
 )
-_SWITCH_KEYS = ("enlarge_tables", "export_menus")
+_SWITCH_KEYS = ("enlarge_tables", "export_menus", "glossary")
 _REQUIRED_KEYS = ("title", "author")
 _PART_KEYS = {"dir", "title", "chapters"}
 _CHAPTER_KEYS = {"dir", "sections"}
@@ -221,6 +234,8 @@ class BookConfig:
         Whether a table has a button that opens it enlarged, as a figure does.
     export_menus : bool
         Whether tables, figures, code blocks and equations offer an export menu.
+    glossary : bool
+        Whether ``\\glossary`` tags make glossary pages.
     mathjax_macros : Mapping[str, Any]
         TeX macros by name, each a definition or ``[definition, argument count]``.
     pygments_light, pygments_dark : str
@@ -238,6 +253,7 @@ class BookConfig:
     parts: tuple[PartConfig, ...] = ()
     enlarge_tables: bool = True
     export_menus: bool = True
+    glossary: bool = True
     mathjax_macros: Mapping[str, Any] = field(default_factory=dict)
     pygments_light: str = DEFAULT_PYGMENTS_LIGHT
     pygments_dark: str = DEFAULT_PYGMENTS_DARK

@@ -65,6 +65,8 @@ window.MathJax = {
       <span class="rh-chapter">Chapter {{ page.chapter_number }}</span>
     {% elif page.kind == "part" %}
       <span class="rh-part">Part {{ page.number }}</span>
+    {% elif page.kind == "glossary" %}
+      <span class="rh-part">{{ glossary_page.title }}</span>
     {% endif %}
   </div>
   <div class="tools">
@@ -123,6 +125,18 @@ window.MathJax = {
         </ol>
       </section>
       {% endfor %}
+      {% if glossary_page %}
+      <section class="toc-part{% if page.kind == 'glossary' %} current{% endif %}">
+        <a class="toc-part-link{% if page == glossary_page %} active{% endif %}" href="{{ page.href(glossary_page) }}">
+          <span class="toc-part-title">{{ glossary_page.title }}</span>
+        </a>
+        <ol class="toc-chapters">
+          {% for entry in glossary_page.chapters %}
+          <li class="unnumbered{% if entry == page %} active{% endif %}"><a href="{{ page.href(entry) }}"><span class="toc-title">{{ entry.title }}</span></a></li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
       {% if book.repo %}
       <div class="sidebar-foot">
         <a href="{{ book.repo }}" class="external" rel="noopener">Source on {{ book.repo_host }}</a>
@@ -154,7 +168,7 @@ window.MathJax = {
 
     <footer class="colophon">
       <span>{{ book.title }} · {{ book.author }} · Revised {{ build_date }}</span>
-      {% if book.edit_url %}
+      {% if book.edit_url and page.kind != "glossary" %}
       <span><a href="{{ book.edit_url }}{{ page.source_path.as_posix() }}" class="external" rel="noopener">Edit this page</a></span>
       {% endif %}
     </footer>

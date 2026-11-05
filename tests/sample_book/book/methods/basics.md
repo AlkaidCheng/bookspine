@@ -11,7 +11,7 @@ Text with a citation [@first-paper] and a link to
 ## Measures
 
 $$
-x = 1 \label{eq:one}
+x = 1 \label{eq:one} \glossary{Unit value}
 $$
 
 ![A flow of steps](figures/flow.svg)
@@ -29,6 +29,7 @@ Table: A captioned table.
 ### Detail
 
 !!! definition "Term"
+    \glossary
     A definition.
 
 !!! note

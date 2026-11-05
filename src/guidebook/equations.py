@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 
 from guidebook.errors import BuildError
-from guidebook.pages import Page
+from guidebook.pages import GlossaryEntry, Page
 
 # The one version that cannot float: the environment sets below copy its rules, so an
 # upgrade must recheck them against tests/test_equations.py.
@@ -58,6 +58,7 @@ _TEX_TOKEN_PATTERN = re.compile(
     \\begin\s*\{(?P<begin>[^}]*)\}
     | \\end\s*\{(?P<end>[^}]*)\}
     | \\label\s*\{(?P<label>[^}]*)\}
+    | \\glossary\s*\{(?P<glossary>[^{}]*)\}
     | \\tag\*?\s*\{(?P<tag>(?:[^{}]|\{[^{}]*\})*)\}
     | (?P<notag>\\(?:notag|nonumber)\b)
     | (?P<row_end>\\\\\*?(?:\[[^\]]*\])?|\\(?:cr|newline)\b)
@@ -67,7 +68,10 @@ _TEX_TOKEN_PATTERN = re.compile(
     """,
     re.X | re.S,
 )
-_ROW_MARKS = {"label", "tag", "notag"}
+_ROW_MARKS = {"label", "glossary", "tag", "notag"}
+
+# Tags only the build reads, which MathJax must not see.
+_GLOSSARY_TAG_PATTERN = re.compile(r"\\glossary(?![A-Za-z])\s*(?:\{[^{}]*\})?")
 
 
 @dataclass
@@ -82,11 +86,14 @@ class EquationRow:
         The text of a manual ``\\tag``.
     counted : bool
         Whether the row takes the next number in the running count.
+    name : str
+        The name a ``\\glossary`` tag gives the row.
     """
 
     label: str = ""
     tag: str = ""
     counted: bool = True
+    name: str = ""
 
 
 def is_empty_row(tex: str) -> bool:
@@ -131,6 +138,8 @@ def equation_rows(tex: str) -> list[EquationRow]:
             braces += 1
         elif kind == "close":
             braces -= 1
+        elif kind == "glossary":
+            row.name = token["glossary"]  # read by the build, so any row can hold it
         elif kind in _ROW_MARKS and INNER_ENVIRONMENTS.isdisjoint(environments):
             if kind == "label":
                 row.label = token["label"]
@@ -142,32 +151,68 @@ def equation_rows(tex: str) -> list[EquationRow]:
     return rows if outer else [row]
 
 
+def equation_anchor(label: str) -> str:
+    """Return the id MathJax gives the equation carrying `label`."""
+    return "mjx-eqn:" + re.sub(r"\s", "_", label)
+
+
 def number_equations(page: Page, equation_labels: dict[str, tuple[Page, str]]) -> None:
     """Carry the chapter's equation count through `page` and record its labels.
+
+    A ``\\glossary`` tag makes a row a named equation, and leaves the page here.
 
     Raises
     ------
     BuildError
-        If a label is already in `equation_labels`.
+        If a label is already in `equation_labels`, or a tag has no name, stands
+        outside its environment, or sits on a row with no label or no number.
     """
     counters = page.counters
     prefix = f"{page.chapter_number}." if page.chapter_number else ""
     page.equation_offset = counters.get("equation", 0)
-    for tex in _DISPLAY_MATH_PATTERN.findall(page.body_html):
-        for row in equation_rows(html.unescape(tex)):
-            number = row.tag
-            if row.counted:
-                counters["equation"] = counters.get("equation", 0) + 1
-                number = f"{prefix}{counters['equation']}"
-            if not row.label or not number:
-                continue
-            if row.label in equation_labels:
-                other = equation_labels[row.label][0].source_path
-                raise BuildError(
-                    f"{page.source_path}: equation label {row.label} "
-                    f"is also used in {other}"
+
+    def number_row(row: EquationRow) -> None:
+        number = row.tag
+        if row.counted:
+            counters["equation"] = counters.get("equation", 0) + 1
+            number = f"{prefix}{counters['equation']}"
+        if row.name and not (row.label and number):
+            raise BuildError(
+                f"{page.source_path}: named equation {row.name} "
+                "needs a \\label and a number"
+            )
+        if not row.label or not number:
+            return
+        if row.label in equation_labels:
+            other = equation_labels[row.label][0].source_path
+            raise BuildError(
+                f"{page.source_path}: equation label {row.label} "
+                f"is also used in {other}"
+            )
+        equation_labels[row.label] = (page, number)
+        if row.name:
+            page.named_equations.append(
+                GlossaryEntry(
+                    name=row.name,
+                    anchor=equation_anchor(row.label),
+                    locator=f"Equation ({number})",
                 )
-            equation_labels[row.label] = (page, number)
+            )
+
+    def replace(match: re.Match[str]) -> str:
+        tex = html.unescape(match.group(1))
+        rows = equation_rows(tex)
+        tag_count = len(_GLOSSARY_TAG_PATTERN.findall(tex))
+        if tag_count != sum(1 for row in rows if row.name):
+            raise BuildError(
+                f"{page.source_path}: \\glossary in an equation needs a name "
+                "and must stand inside the equation's environment"
+            )
+        for row in rows:
+            number_row(row)
+        return _GLOSSARY_TAG_PATTERN.sub("", match.group(0))
+
+    page.body_html = _DISPLAY_MATH_PATTERN.sub(replace, page.body_html)
 
 
 def resolve_equation_refs(
@@ -191,7 +236,7 @@ def resolve_equation_refs(
         if target is page:
             return match.group(0)  # MathJax resolves references within a page
         text = f"({number})" if command == "eqref" else number
-        anchor = "mjx-eqn:" + re.sub(r"\s", "_", label)
+        anchor = equation_anchor(label)
         return rf"\href{{{page.href(target)}#{anchor}}}{{\text{{{text}}}}}"
 
     page.body_html = _MATH_PATTERN.sub(
