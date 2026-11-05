@@ -12,6 +12,7 @@ from guidebook.config import (
     ChapterConfig,
     Project,
     load_config,
+    parse_yaml,
 )
 from guidebook.errors import BuildError
 
@@ -21,6 +22,26 @@ def config_path_with(tmp_path: Path, **keys: Any) -> Path:
     record = {"title": "A title", "author": "An author", **keys}
     config_path.write_text(yaml.safe_dump(record, sort_keys=False), encoding="utf-8")
     return config_path
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["a: [1, 2", "a: b: c", "{", "&a [*b]", "a:\n\t- b", "yes\t &x ", "1#c\t] 1.5"],
+)
+def test_invalid_yaml_keeps_the_python_parser_message(text: str) -> None:
+    with pytest.raises(yaml.YAMLError) as expected:
+        yaml.safe_load(text)
+    with pytest.raises(yaml.YAMLError) as raised:
+        parse_yaml(text)
+    assert str(raised.value) == str(expected.value)
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["", "a: 1", "a: [1, two, 3.0]", "b: 2020-01-01\nc: ~\nd: yes", "- &x 1\n- *x"],
+)
+def test_yaml_gives_the_data_of_the_python_parser(text: str) -> None:
+    assert parse_yaml(text) == yaml.safe_load(text)
 
 
 def test_defaults_fill_every_optional_key(tmp_path: Path) -> None:
