@@ -174,10 +174,19 @@
   if (typeof document === "undefined") return;
 
   var root = document.documentElement;
-  var icon =
-    '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">' +
-    '<path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14" fill="none" stroke="currentColor" ' +
-    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function iconHtml(path) {
+    return (
+      '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="' + path +
+      '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    );
+  }
+  var icons = {
+    save: iconHtml("M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"),
+    copy: iconHtml("M9 9h11v11H9zM15 9V4H4v11h5"),
+    done: iconHtml("M5 12.5l4.5 4.5L19 7.5"),
+    failed: iconHtml("M6 6l12 12M18 6L6 18")
+  };
 
   /* ---------------------------------------------------- reading the page */
 
@@ -210,7 +219,7 @@
         if (text) runs.push(Object.assign({}, style, { text: text }));
         return;
       }
-      if (child.nodeType !== Node.ELEMENT_NODE || child.matches(".caplabel, .anchor")) return;
+      if (child.nodeType !== Node.ELEMENT_NODE || child.matches(".caplabel, .anchor, .export-toggle")) return;
       if (child.matches(".arithmatex")) {
         runs.push({ text: texOf(child, sources), math: true });
         return;
@@ -502,7 +511,7 @@
     }));
   }
 
-  function exportPng(component, name) {
+  function pngBlob(component) {
     var isSvg = component.target.matches("svg");
     return document.fonts.ready.then(function () {
       return isSvg ? loadSvgImage(component.target) : null;
@@ -515,7 +524,26 @@
         stage.remove();
         restoreTheme();
       });
-    }).then(canvasBlob).then(function (blob) { save(name + ".png", blob); });
+    }).then(canvasBlob);
+  }
+
+  function exportPng(component, name) {
+    return pngBlob(component).then(function (blob) { save(name + ".png", blob); });
+  }
+
+  /* The clipboard API exists only on https and localhost. */
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return Promise.reject(new Error("This page cannot use the clipboard"));
+  }
+
+  /* Safari keeps the click's permission only for a ClipboardItem made at once, so the
+     item takes the promise of the image rather than the image. */
+  function copyPng(component) {
+    if (!navigator.clipboard || !navigator.clipboard.write || !window.ClipboardItem) {
+      return Promise.reject(new Error("This page cannot copy images"));
+    }
+    return navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob(component) })]);
   }
 
   /* The print dialog keeps vectors and fonts, which no script in the page can match
@@ -549,19 +577,18 @@
   function textFormat(label, extension, read) {
     return {
       label: label,
-      extension: extension,
-      run: function (component, name) {
+      save: function (component, name) {
         var type = "text/plain;charset=utf-8";
         save(name + "." + extension, new Blob([read(component)], { type: type }));
         return Promise.resolve();
       },
-      read: read
+      copy: function (component) { return copyText(read(component)); }
     };
   }
 
   var imageFormats = [
-    { label: "PNG", extension: "png", run: exportPng },
-    { label: "PDF", extension: "pdf", run: exportPdf }
+    { label: "PNG", save: exportPng, copy: copyPng },
+    { label: "PDF", save: exportPdf, hint: "Save as PDF, through the print dialog" }
   ];
 
   function tableFormats() {
@@ -578,8 +605,8 @@
   }
 
   function codeFormats(element) {
-    var language = codeLanguage(element);
-    var format = textFormat(language ? "Source" : "Text", codeExtension(language), function (component) {
+    var extension = codeExtension(codeLanguage(element));
+    var format = textFormat("Source (." + extension + ")", extension, function (component) {
       return component.target.querySelector("code").textContent;
     });
     return [format].concat(imageFormats);
@@ -609,64 +636,99 @@
     openToggle = null;
   }
 
-  function flash(button, text) {
-    var label = button.textContent;
-    button.textContent = text;
-    setTimeout(function () { button.textContent = label; }, FLASH_MILLISECONDS);
+  /* Show the outcome of an action on its button for a moment. */
+  function flash(button, icon, message) {
+    var holder = button.querySelector(".export-icon");
+    var label = button.getAttribute("aria-label");
+    var shown = holder.innerHTML;
+    holder.innerHTML = icon;
+    button.setAttribute("aria-label", message);
+    button.title = message;
+    setTimeout(function () {
+      holder.innerHTML = shown;
+      button.setAttribute("aria-label", label);
+      button.title = label;
+    }, FLASH_MILLISECONDS);
   }
 
-  /* The clipboard API exists only on https and localhost. */
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
-    return Promise.reject(new Error("No clipboard here"));
-  }
-
-  function menuButton(className, text) {
+  function menuButton(className, label, icon) {
     var button = document.createElement("button");
     button.type = "button";
     button.className = className;
+    button.title = label;
     button.setAttribute("role", "menuitem");
-    button.textContent = text;
+    button.setAttribute("aria-label", label);
+    button.innerHTML = '<span class="export-icon">' + icon + "</span>";
     return button;
   }
 
+  function saveButton(component, format) {
+    var button = menuButton("export-save", format.hint || "Save as " + format.label, icons.save);
+    var name = document.createElement("span");
+    name.className = "export-name";
+    name.textContent = format.label;
+    button.insertBefore(name, button.firstChild);
+    button.addEventListener("click", function () {
+      format.save(component, component.name).then(closeMenu).catch(function (error) {
+        console.error(error);
+        flash(button, icons.failed, "Could not save");
+      });
+    });
+    return button;
+  }
+
+  function copyButton(component, format) {
+    var button = menuButton("export-copy", "Copy as " + format.label, icons.copy);
+    button.addEventListener("click", function () {
+      format.copy(component).then(function () {
+        flash(button, icons.done, "Copied");
+      }).catch(function (error) {
+        console.error(error);
+        flash(button, icons.failed, "Could not copy");
+      });
+    });
+    return button;
+  }
+
+  /* The save button spans the row, so that the whole row saves, and the copy button
+     sits on top of it in a column of its own. */
   function menuRow(component, format) {
     var row = document.createElement("div");
     row.className = "export-row";
     row.setAttribute("role", "none");
-    var button = menuButton("export-format", format.label);
-    var extension = document.createElement("span");
-    extension.className = "export-extension";
-    extension.textContent = "." + format.extension;
-    button.appendChild(extension);
-    button.addEventListener("click", function () {
-      format.run(component, component.name).then(closeMenu).catch(function (error) {
-        console.error(error);
-        flash(button, "Could not export");
-      });
-    });
-    row.appendChild(button);
-    if (format.read) {
-      var copy = menuButton("export-copy", "Copy");
-      copy.setAttribute("aria-label", "Copy " + format.label);
-      copy.addEventListener("click", function () {
-        copyText(format.read(component)).then(function () {
-          flash(copy, "Copied");
-        }, function () { flash(copy, "Failed"); });
-      });
-      row.appendChild(copy);
-    }
+    row.appendChild(saveButton(component, format));
+    if (format.copy) row.appendChild(copyButton(component, format));
     return row;
+  }
+
+  function menuHeading() {
+    var heading = document.createElement("div");
+    heading.className = "export-heading";
+    heading.setAttribute("aria-hidden", "true");
+    heading.innerHTML = "<span>Format</span><span>Copy</span><span>Save</span>";
+    return heading;
+  }
+
+  /* Below the button, or above it when the menu would run off the window. */
+  function placeMenu(toggle) {
+    var rect = toggle.getBoundingClientRect();
+    var margin = 8;
+    var gap = 4;
+    var left = Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - margin);
+    var top = rect.bottom + gap;
+    if (top + menu.offsetHeight > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - gap - menu.offsetHeight);
+    }
+    menu.style.left = Math.max(margin, left) + window.scrollX + "px";
+    menu.style.top = top + window.scrollY + "px";
   }
 
   function openMenu(toggle, component) {
     menu.innerHTML = "";
+    menu.appendChild(menuHeading());
     component.formats.forEach(function (format) { menu.appendChild(menuRow(component, format)); });
     menu.hidden = false;
-    var rect = toggle.getBoundingClientRect();
-    var left = rect.right - menu.offsetWidth;
-    menu.style.left = Math.max(8, left) + window.scrollX + "px";
-    menu.style.top = rect.bottom + 4 + window.scrollY + "px";
+    placeMenu(toggle);
     toggle.setAttribute("aria-expanded", "true");
     openToggle = toggle;
     menu.querySelector("button").focus();
@@ -710,13 +772,11 @@
     return host;
   }
 
-  function addToggle(component, title, offsetFrom) {
-    var host = component.host;
-    host.classList.add("export-host");
+  function makeToggle(component, title) {
     var toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "export-toggle iconbtn";
-    toggle.innerHTML = icon;
+    toggle.innerHTML = icons.save;
     toggle.title = "Export";
     toggle.setAttribute("aria-label", "Export " + title);
     toggle.setAttribute("aria-haspopup", "menu");
@@ -726,12 +786,32 @@
       closeMenu();
       if (!isOpen) openMenu(toggle, component);
     });
-    if (offsetFrom) {
-      var style = getComputedStyle(offsetFrom);
-      toggle.style.top = "calc(" + style.marginTop + " + 0.25rem)";
-      toggle.style.right = "calc(" + style.marginRight + " + 0.25rem)";
+    return toggle;
+  }
+
+  /* The button keeps off the text. A caption or title takes it at the end of its first
+     line, with the text wrapping around it. */
+  function addToLabel(component, title, label) {
+    component.host.classList.add("export-host");
+    var toggle = makeToggle(component, title);
+    toggle.classList.add("export-inline");
+    label.insertBefore(toggle, label.firstChild);
+  }
+
+  /* Without a label line it floats at a corner. `side` is the corner's side, `element`
+     the component whose margins the host contains, and `offset` the button's distance
+     from that component's top edge. */
+  function addToCorner(component, title, side, element, offset) {
+    component.host.classList.add("export-host");
+    var toggle = makeToggle(component, title);
+    if (element) {
+      var style = getComputedStyle(element);
+      var margin = side === "left" ? style.marginLeft : style.marginRight;
+      toggle.style.top = "calc(" + style.marginTop + " + " + offset + ")";
+      toggle.style[side] = "calc(" + margin + " + 0.5rem)";
     }
-    host.appendChild(toggle);
+    toggle.classList.add("export-" + side);
+    component.host.appendChild(toggle);
   }
 
   function addFigureToggles() {
@@ -740,42 +820,52 @@
       var target = figure.querySelector(isTable ? "table" : "svg, img");
       if (!target) return;
       var title = isTable ? "table" : "figure";
-      addToggle({
+      var caption = figure.querySelector("figcaption");
+      var component = {
         host: figure,
         target: target,
         kind: isTable ? "table" : "figure",
         name: nameOf(figure.querySelector(".caplabel"), title),
         formats: isTable ? tableFormats() : target.matches("svg") ? svgFormats() : imageFormats
-      }, title);
+      };
+      if (caption) {
+        addToLabel(component, title, caption);
+      } else {
+        figure.classList.add("export-uncaptioned");
+        addToCorner(component, title, "right");
+      }
     });
   }
 
-  function addWrappedToggles(selector, title, makeFormats) {
+  function addWrappedToggles(selector, title, makeFormats, side, offset) {
     document.querySelectorAll(selector).forEach(function (element) {
-      addToggle({
+      addToCorner({
         host: wrapInHost(element),
         target: element,
         kind: title,
         name: nameOf(null, title),
         formats: makeFormats(element)
-      }, title, element);
+      }, title, side, element, offset);
     });
   }
 
   function addBoxToggles() {
     document.querySelectorAll(".prose div.admonition").forEach(function (box) {
-      addToggle({
+      addToLabel({
         host: box,
         target: box,
         kind: "box",
         name: nameOf(box.querySelector(".boxlabel"), "box"),
         formats: imageFormats
-      }, "box");
+      }, "box", box.querySelector(".admonition-title"));
     });
   }
 
   addFigureToggles();
-  addWrappedToggles(".prose div.highlight", "code", codeFormats);
-  addWrappedToggles(".prose div.arithmatex", "equation", equationFormats);
+  /* A long line of code scrolls under anything over the block, so the button sits on
+     the block's top edge, clear of the first line. */
+  addWrappedToggles(".prose div.highlight", "code", codeFormats, "right", "-0.8rem");
+  /* An equation's number sits at the right, and its left edge is free. */
+  addWrappedToggles(".prose div.arithmatex", "equation", equationFormats, "left", "0.25rem");
   addBoxToggles();
 })();

@@ -140,8 +140,9 @@ reference list is generated at the end of the page, in order of first citation.
 
 ## Exporting
 
-Every table, figure, code block, display equation and box has a button at its top
-right, shown on hover, that opens a menu of file formats.
+Every table, figure, code block, display equation and box has a button, shown on hover,
+that opens a menu of file formats. It sits at the end of a caption or box title, in the
+corner of a code block or a table without a caption, and at the left of an equation.
 
 | Component | Formats |
 |---|---|
@@ -153,8 +154,8 @@ right, shown on hover, that opens a menu of file formats.
 | Box | PNG, PDF |
 
 Exports use the light colour scheme on a white background. Markdown and LaTeX keep a
-table's caption, and images and PDFs leave it out. The text formats can also be copied
-to the clipboard. LaTeX output defines the book's macros it uses, and states the
+table's caption, and images and PDFs leave it out. Every format except PDF can also be
+copied to the clipboard. LaTeX output defines the book's macros it uses, and states the
 packages it needs.
 
 PDF opens the browser's print dialog with the page sized to the component, which keeps
