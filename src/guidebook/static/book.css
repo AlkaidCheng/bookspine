@@ -730,10 +730,14 @@ div.export-host { display: flow-root; }
 .export-right { right: 0.25rem; }
 .export-left { left: 0.25rem; }
 .export-inline { float: right; margin: -0.1rem 0 0 0.75rem; }
-.export-host:hover > .export-toggle,
-.export-host:hover > figcaption > .export-toggle,
-.export-host:hover > .admonition-title > .export-toggle,
-.export-toggle:focus-visible, .export-toggle[aria-expanded="true"] { opacity: 1; }
+/* The button shows only over its own object, so a holder's margins do not count, and
+   an object inside another takes over from it. A browser without :has() shows both. */
+figure.export-host:hover > .export-toggle,
+figure.export-host:hover > figcaption > .export-toggle,
+.admonition.export-host:hover > .admonition-title > .export-toggle,
+.export-host > :hover ~ .export-toggle,
+.export-toggle:hover, .export-toggle:focus-visible, .export-toggle[aria-expanded="true"] { opacity: 1; }
+.export-host:has(.export-host > :hover) > .admonition-title > .export-toggle:not(:hover, :focus-visible, [aria-expanded="true"]) { opacity: 0; }
 .export-toggle:hover { color: var(--accent-ink); }
 @media (hover: none) { .export-toggle { opacity: 0.55; } }
 .lightbox-content .export-toggle { display: none; }

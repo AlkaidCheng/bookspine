@@ -140,9 +140,10 @@ reference list is generated at the end of the page, in order of first citation.
 
 ## Exporting
 
-Every table, figure, code block, display equation and box has a button, shown on hover,
-that opens a menu of file formats. It sits at the end of a caption or box title, in the
-corner of a code block or a table without a caption, and at the left of an equation.
+Every table, figure, code block, display equation and box has a button that opens a menu
+of file formats. It appears when the cursor is over that component, and stays faintly
+visible on a touch screen. It sits at the end of a caption or box title, in the corner of
+a code block or a table without a caption, and at the left of an equation.
 
 | Component | Formats |
 |---|---|
