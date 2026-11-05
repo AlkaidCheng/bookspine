@@ -366,6 +366,8 @@ code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal;
 }
 .highlight pre { margin: 0; padding: 0.9rem 1.1rem; }
 .highlight pre code { white-space: pre; }
+/* A lexer's error token means it could not parse the code, not that the code is wrong. */
+.highlight .err, [data-theme="dark"] .highlight .err { background: none; border: 0; color: inherit; }
 /* A long line continues past its own indentation, or at half the block's width. */
 .highlight .line {
   --hang: min(calc((var(--indent, 0) + 2) * 1ch), 50%);
