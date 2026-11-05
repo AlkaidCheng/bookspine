@@ -32,6 +32,7 @@ from guidebook.equations import (
 )
 from guidebook.errors import BuildError
 from guidebook.glossary import collect_terms, make_glossary_pages
+from guidebook.inline import skip_impossible_patterns
 from guidebook.pages import Page, load_pages
 from guidebook.passes import (
     break_bare_urls,
@@ -154,9 +155,11 @@ def build_book(
 
 def make_markdown() -> markdown.Markdown:
     """Return the converter every page goes through."""
-    return markdown.Markdown(
+    md = markdown.Markdown(
         extensions=MARKDOWN_EXTENSIONS, extension_configs=MARKDOWN_EXTENSION_CONFIGS
     )
+    skip_impossible_patterns(md)
+    return md
 
 
 def convert_pages(

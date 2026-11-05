@@ -13,4 +13,5 @@
 - Stop outlining code in red where the highlighter cannot parse it (#8).
 - Show code as written, without the code font's ligatures, on the page and in PNG exports (#9).
 - Keep the arrow of an `.external` link on the line that holds the end of the link (#9).
-- Load MathJax only on pages where it has something to do (#11).
+- Load MathJax only on pages where it has something to do (#10).
+- Speed up `guidebook build` by skipping inline patterns that cannot match a text (#11).

@@ -115,6 +115,9 @@ _TEXT_KEYS = (
     "pygments_light",
     "pygments_dark",
 )
+# The C parser, which is much faster, where PyYAML was built with it.
+_FAST_YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
 _SWITCH_KEYS = ("enlarge_tables", "export_menus", "glossary", "wrap_code")
 _REQUIRED_KEYS = ("title", "author")
 _PART_KEYS = {"dir", "title", "chapters"}
@@ -266,6 +269,25 @@ class BookConfig:
     pygments_dark: str = DEFAULT_PYGMENTS_DARK
 
 
+def parse_yaml(text: str) -> Any:
+    """Return the data in the YAML `text`, as :func:`yaml.safe_load` does.
+
+    The C parser accepts some tabs that the Python parser refuses, so it does not see
+    text with a tab.
+
+    Raises
+    ------
+    yaml.YAMLError
+        If `text` is invalid, with the Python parser's fuller message.
+    """
+    if "\t" in text:
+        return yaml.safe_load(text)
+    try:
+        return yaml.load(text, Loader=_FAST_YAML_LOADER)
+    except yaml.YAMLError:
+        return yaml.safe_load(text)
+
+
 def load_config(config_path: Path) -> BookConfig:
     """Read and check the ``book.yaml`` at `config_path`.
 
@@ -279,7 +301,7 @@ def load_config(config_path: Path) -> BookConfig:
     except FileNotFoundError:
         raise BuildError(f"no {config_path.name} in {config_path.parent}") from None
     try:
-        record = yaml.safe_load(config_text)
+        record = parse_yaml(config_text)
     except yaml.YAMLError as error:
         raise BuildError(f"{CONFIG_NAME}: invalid YAML: {error}") from None
     return _config_from_record(record)

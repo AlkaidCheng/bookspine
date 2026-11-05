@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from guidebook.config import CONFIG_NAME, OPENER_NAME, BookConfig
+from guidebook.config import CONFIG_NAME, OPENER_NAME, BookConfig, parse_yaml
 from guidebook.errors import BuildError
 
 _FRONT_MATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
@@ -171,7 +171,7 @@ def split_front_matter(text: str, source_path: Path) -> tuple[dict[str, Any], st
     if not match:
         raise BuildError(f"{source_path}: missing YAML front matter")
     try:
-        meta = yaml.safe_load(match.group(1)) or {}
+        meta = parse_yaml(match.group(1)) or {}
     except yaml.YAMLError as error:
         raise BuildError(f"{source_path}: invalid front matter: {error}") from None
     if not isinstance(meta, dict):
