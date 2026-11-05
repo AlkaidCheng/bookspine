@@ -37,6 +37,7 @@ my-book/
 ├── book.yaml             # title, author, parts and chapters
 ├── book/
 │   ├── index.md          # the title page
+│   ├── help.md           # an optional help page
 │   └── methods/          # a part
 │       ├── index.md      # the part's opener
 │       ├── basics.md     # a chapter on one page
@@ -166,6 +167,16 @@ $$
 The build stops on a name used twice on a page, and on a named equation with no label or
 number.
 
+### Help page
+
+A book can keep what a reader needs only now and then on a page of its own, such as its
+conventions, its notation, how to cite it and where to report a problem. `help_page` in
+`book.yaml` names a Markdown file in `book/`, and the foot of the sidebar links to it
+from every page, under the page's title. The page takes its address from the file's
+name, so `help.md` is served at `help/`, and the build stops if a part or the glossary
+holds that address. The page has no number, stays out of the contents and of the
+previous and next links, and is covered by the search.
+
 ## Exporting
 
 Every table, figure, code block and display equation has a button that opens a menu of
@@ -203,6 +214,7 @@ prints on its default paper.
 | `repo` | empty | The source repository, linked from the sidebar. |
 | `repo_host` | empty | The name in that link, such as `GitHub`. Required with `repo`. |
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
+| `help_page` | empty | The Markdown file in `book/` [linked from the foot of the sidebar](#help-page). |
 | `parts` | empty | The parts and chapters, as above. |
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
@@ -228,7 +240,7 @@ first.
 
 | Path | Effect |
 |---|---|
-| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter` and `section`. |
+| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter`, `section`, `glossary` and `help`. |
 | `theme/static/NAME` | Replaces the package's static file of that name, or adds a new one. A `pygments.css` here takes the place of the generated one. |
 
 A template replaced whole no longer receives changes from new releases, so extend the

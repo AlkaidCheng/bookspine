@@ -6,6 +6,7 @@ url: https://example.org/sample/
 repo: https://example.org/sample-repo
 repo_host: ExampleHost
 edit_url: https://example.org/sample-repo/edit/
+help_page: help.md
 
 mathjax_macros:
   dd: \mathrm{d}

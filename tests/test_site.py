@@ -17,6 +17,7 @@ PACKAGE_TEMPLATES = [
     "base.html",
     "chapter.html",
     "glossary.html",
+    "help.html",
     "home.html",
     "part.html",
     "section.html",
@@ -50,7 +51,7 @@ def test_the_result_counts_what_was_written(project_dir: Path) -> None:
     result = build_book(project_dir)
     assert isinstance(result, BuildResult)
     assert result.site_dir == project_dir / "site"
-    assert result.page_count == 9
+    assert result.page_count == 10
     assert result.chapter_count == 2
     assert result.warnings == []
 
@@ -178,7 +179,7 @@ def test_source_and_edit_links_are_left_out_when_unset(project_dir: Path) -> Non
     kept = [line for line in lines if not line.startswith(("repo", "edit_url"))]
     config_path.write_text("".join(kept), encoding="utf-8")
     home = page_text(build_book(project_dir).site_dir, "")
-    assert "sidebar-foot" not in home
+    assert "Source on" not in home
     assert "Edit this page" not in home
 
 

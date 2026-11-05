@@ -16,8 +16,10 @@ from guidebook.pages import (
 
 
 def sample_pages(project_dir: Path) -> list[Page]:
+    """Return the sample book's pages in reading order, without its help page."""
     config = load_config(project_dir / "book.yaml")
-    return load_pages(config, project_dir / "book")
+    pages = load_pages(config, project_dir / "book")
+    return [page for page in pages if page.kind != "help"]
 
 
 @pytest.mark.parametrize(

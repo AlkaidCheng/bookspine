@@ -158,7 +158,8 @@ def convert_pages(
     Parameters
     ----------
     pages : list of Page
-        The book's pages in reading order, to which the glossary's are appended.
+        The pages :func:`~guidebook.pages.load_pages` returned, to which the
+        glossary's are appended.
     book_dir : Path
         The book's sources.
     has_glossary : bool, optional
@@ -187,9 +188,11 @@ def convert_pages(
         mark_external_links(page)
         converted.search_index += search_entries(page)
 
+    last_page = next(page for page in reversed(pages) if page.kind != "help")
     for glossary_page in make_glossary_pages(pages) if has_glossary else []:
-        pages[-1].next = glossary_page
-        glossary_page.prev = pages[-1]
+        last_page.next = glossary_page
+        glossary_page.prev = last_page
+        last_page = glossary_page
         pages.append(glossary_page)
         converted.search_index += search_entries(glossary_page)
 
@@ -255,6 +258,7 @@ def page_files(
         book=config,
         build_date=build_date().strftime(BUILD_DATE_FORMAT),
         glossary_page=next((page for page in pages if page.kind == "glossary"), None),
+        help_page=next((page for page in pages if page.kind == "help"), None),
         mathjax_url=MATHJAX_URL,
     )
     parts = [page for page in pages if page.kind == "part"]
