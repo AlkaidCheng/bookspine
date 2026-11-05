@@ -360,13 +360,14 @@
     return parts;
   }
 
-  /* Each word is drawn where the browser placed it, so the lines break as on the page. */
+  /* Each word is drawn where the browser placed it, so the lines break as on the page.
+     A canvas cannot turn ligatures off, so text without them goes character by character. */
   function paintText(context, node, style, origin) {
-    var words = /\S+/g;
+    var pieces = style.fontVariantLigatures === "none" ? /\S/gu : /\S+/g;
     var range = document.createRange();
     var match;
     setTextStyle(context, style, style.color);
-    while ((match = words.exec(node.nodeValue))) {
+    while ((match = pieces.exec(node.nodeValue))) {
       wordParts(range, node, match.index, match.index + match[0].length).forEach(function (part) {
         var rect = textRect(range, node, part[0], part[1])[0];
         if (!rect) return;
