@@ -98,7 +98,7 @@ kbd {
   position: sticky; top: 0; z-index: 30;
   height: var(--topbar);
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 0.75rem;
   padding: 0 1rem;
@@ -634,7 +634,6 @@ body.lightbox-open { overflow: hidden; }
   .layout { grid-template-columns: minmax(0, 1fr); }
   .menu { display: inline-grid; }
   .running-head { display: none; }
-  .topbar { grid-template-columns: auto 1fr auto; }
   .sidebar {
     position: fixed; top: var(--topbar); left: 0; bottom: 0;
     width: min(20rem, 85vw);
