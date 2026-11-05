@@ -29,6 +29,7 @@ from guidebook.errors import BuildError
 from guidebook.glossary import collect_terms, make_glossary_pages
 from guidebook.pages import Page, load_pages
 from guidebook.passes import (
+    break_bare_urls,
     mark_external_links,
     number_boxes,
     number_figures_and_tables,
@@ -187,6 +188,8 @@ def convert_pages(
         rewrite_links(page, pages_by_source, converted.assets, book_dir)
         mark_external_links(page)
         converted.search_index += search_entries(page)
+        # After the search text, which would otherwise split at every <wbr>.
+        break_bare_urls(page)
 
     last_page = next(page for page in reversed(pages) if page.kind != "help")
     for glossary_page in make_glossary_pages(pages) if has_glossary else []:

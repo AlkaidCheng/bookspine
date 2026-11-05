@@ -36,6 +36,16 @@ _LINK_PATTERN = re.compile(
     r'(href|src)="([^"#]*?\.(?:md|svg|png|jpe?g|gif|pdf|webp))(#[^"]*)?"'
 )
 _TAG_PATTERN = re.compile(r"<[^>]+>")
+_EXTERNAL_LINK_PATTERN = re.compile(
+    r'<a href="(https?://[^"]+)" class="external" rel="noopener">([^<\s]+)</a>'
+)
+_URL_SCHEME_PATTERN = re.compile(r"https?://")
+# After a colon, a double slash, an equals sign or an ampersand, and before a single
+# slash or other punctuation, as The Chicago Manual of Style has it in 7.46, "Dividing
+# URLs and email addresses". A slash or mark that ends the address stays with it.
+_URL_BREAK_PATTERN = re.compile(
+    r"(?<=:)(?!//)|(?<=//)|(?<=[=&])|(?<![:/])(?=/.)|(?=(?:[^\w/:=&]|_).)"
+)
 
 
 def outside_code(text: str, transform: Callable[[str], str]) -> str:
@@ -300,6 +310,35 @@ def mark_external_links(page: Page) -> None:
         r'<a href="\1" class="external" rel="noopener"',
         page.body_html,
     )
+
+
+def url_with_breaks(url_text: str) -> str:
+    """Return the escaped `url_text` with a ``<wbr>`` wherever it may break."""
+    parts = _URL_BREAK_PATTERN.split(html.unescape(url_text))
+    return "<wbr>".join(html.escape(part, quote=False) for part in parts)
+
+
+def break_bare_urls(page: Page) -> None:
+    """Let the links that show their own address wrap between its elements.
+
+    An address has few places to break by itself, so a long one would widen the page.
+    A ``<wbr>`` adds none of its own text to a selection or to the link. The class
+    keeps hyphenation out of the address, where an added hyphen would read as part of it.
+    """
+
+    def plain_address(url: str) -> str:
+        return _URL_SCHEME_PATTERN.sub("", url, count=1).rstrip("/")
+
+    def replace(match: re.Match[str]) -> str:
+        address, text = match.group(1), match.group(2)
+        if plain_address(address) != plain_address(text):
+            return match.group(0)
+        return (
+            f'<a href="{address}" class="external bare-url" rel="noopener">'
+            f"{url_with_breaks(text)}</a>"
+        )
+
+    page.body_html = _EXTERNAL_LINK_PATTERN.sub(replace, page.body_html)
 
 
 def search_entries(page: Page) -> list[dict[str, str]]:

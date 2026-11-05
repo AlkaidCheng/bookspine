@@ -8,3 +8,4 @@
 - Add the `\glossary` tag, which indexes terms and equations on glossary pages, controlled by the `glossary` key (#4).
 - Add the `help_page` key, which names a page of conventions and resources linked from the foot of the sidebar (#5).
 - Keep the `.topbar` search and colour scheme buttons at the right edge of the page (#6).
+- Wrap links that show their own address between its elements, with no added hyphen, so a long URL no longer widens the page (#7).

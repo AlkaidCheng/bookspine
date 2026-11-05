@@ -114,6 +114,19 @@ def test_links_and_citations_resolve(site_dir: Path) -> None:
     assert '<a class="cite" href="#ref-first-paper">1</a>' in basics
 
 
+def test_a_bare_url_can_wrap_and_stays_whole_in_the_search(site_dir: Path) -> None:
+    address = "https://example.org/journal/2020/first_paper.html"
+    basics = page_text(site_dir, "methods/basics")
+    link = re.search(
+        rf'<a href="{address}" class="external bare-url"[^>]*>(.*?)</a>', basics
+    )
+    assert link is not None
+    assert "<wbr>/journal" in link.group(1)
+    assert link.group(1).replace("<wbr>", "") == address
+    index_text = (site_dir / "search.json").read_text(encoding="utf-8")
+    assert address in index_text
+
+
 def test_search_holds_every_page(site_dir: Path) -> None:
     entries = json.loads((site_dir / "search.json").read_text(encoding="utf-8"))
     assert {entry["page"] for entry in entries} >= {

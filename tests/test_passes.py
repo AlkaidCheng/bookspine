@@ -9,6 +9,7 @@ from guidebook.config import SEARCH_TEXT_LIMIT
 from guidebook.errors import BuildError
 from guidebook.pages import Page
 from guidebook.passes import (
+    break_bare_urls,
     mark_external_links,
     number_boxes,
     number_figures_and_tables,
@@ -17,6 +18,7 @@ from guidebook.passes import (
     resolve_citations,
     rewrite_links,
     search_entries,
+    url_with_breaks,
 )
 from guidebook.site import make_markdown
 
@@ -229,6 +231,72 @@ def test_external_links_are_marked() -> None:
     mark_external_links(page)
     assert 'class="external" rel="noopener"' in page.body_html
     assert '<a href="#a">y</a>' in page.body_html
+
+
+def external_link(address: str, text: str) -> str:
+    return f'<a href="{address}" class="external" rel="noopener">{text}</a>'
+
+
+@pytest.mark.parametrize(
+    "address, text",
+    [
+        ("https://example.org/a/b", "https://example.org/a/b"),
+        ("https://example.org/a/b", "example.org/a/b"),
+        ("http://example.org/a", "example.org/a"),
+        ("https://example.org/a/", "https://example.org/a"),
+        ("https://example.org/a", "https://example.org/a/"),
+    ],
+)
+def test_a_link_that_shows_its_address_is_marked(address: str, text: str) -> None:
+    page = make_page(external_link(address, text))
+    break_bare_urls(page)
+    assert f'<a href="{address}" class="external bare-url"' in page.body_html
+    assert page.body_html.replace("<wbr>", "").endswith(f">{text}</a>")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the documentation",
+        "documentation",
+        "b",
+        "example.org/a",
+        "<code>https://example.org/a/b</code>",
+    ],
+)
+def test_a_link_with_other_text_is_left_alone(text: str) -> None:
+    link = external_link("https://example.org/a/b", text)
+    page = make_page(link)
+    break_bare_urls(page)
+    assert page.body_html == link
+
+
+def test_a_link_inside_the_book_is_left_alone() -> None:
+    page = make_page('<a href="../a/">../a/</a>')
+    break_bare_urls(page)
+    assert page.body_html == '<a href="../a/">../a/</a>'
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("https://a.org/b", "https://<wbr>a<wbr>.org<wbr>/b"),
+        ("a.org/b_c-d", "a<wbr>.org<wbr>/b<wbr>_c<wbr>-d"),
+        ("a.org:8080/b", "a<wbr>.org:<wbr>8080<wbr>/b"),
+        (
+            "a.org/b?c=1&amp;d=2#e",
+            "a<wbr>.org<wbr>/b<wbr>?c=<wbr>1&amp;<wbr>d=<wbr>2<wbr>#e",
+        ),
+        ("a.org/b/", "a<wbr>.org<wbr>/b/"),
+        ("a.org/b//c", "a<wbr>.org<wbr>/b<wbr>//<wbr>c"),
+    ],
+)
+def test_a_url_may_break_between_its_elements(text: str, expected: str) -> None:
+    assert url_with_breaks(text) == expected
+
+
+def test_an_address_with_nothing_to_break_on_is_kept_whole() -> None:
+    assert url_with_breaks("example") == "example"
 
 
 def test_search_has_one_entry_per_section() -> None:

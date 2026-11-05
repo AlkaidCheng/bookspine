@@ -223,6 +223,7 @@ kbd {
 .content {
   padding: 0 clamp(1rem, 5vw, 4rem) 4rem;
   min-width: 0;
+  overflow-wrap: break-word;
 }
 .content > article { max-width: var(--measure); margin: 0 auto; }
 .pagenav, .colophon { max-width: var(--measure); margin: 0 auto; }
@@ -288,7 +289,7 @@ kbd {
 /* ----------------------------------------------------------------- prose */
 
 .prose { font-size: 1.0625rem; }
-.prose > p, .prose li, .prose dd { hyphens: auto; }
+.prose p:not(.admonition-title), .prose li, .prose dd { hyphens: auto; }
 .prose p { margin: 0 0 1rem; }
 .prose h2, .prose h3, .prose h4, .prose .references h2 {
   font-weight: 600;
@@ -339,6 +340,7 @@ kbd {
   opacity: 0.6;
 }
 .sidebar-foot a.external::after, .colophon a.external::after { display: none; }
+.prose a.bare-url { hyphens: manual; }
 
 /* ------------------------------------------------------------------- code */
 
