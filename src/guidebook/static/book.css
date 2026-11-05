@@ -344,7 +344,8 @@ kbd {
 
 /* ------------------------------------------------------------------- code */
 
-code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal; }
+/* Ligatures would hide the characters a reader has to type. */
+code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal; font-variant-ligatures: none; }
 .prose code {
   font-size: 0.86em;
   background: var(--code-bg);

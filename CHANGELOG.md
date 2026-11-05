@@ -11,3 +11,4 @@
 - Wrap links that show their own address between its elements, with no added hyphen, so a long URL no longer widens the page (#7).
 - Wrap long lines of code with a hanging indent instead of scrolling them sideways, controlled by the `wrap_code` key (#8).
 - Stop outlining code in red where the highlighter cannot parse it (#8).
+- Show code as written, without the code font's ligatures, on the page and in PNG exports (#9).
