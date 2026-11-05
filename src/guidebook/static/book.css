@@ -289,7 +289,7 @@ kbd {
 /* ----------------------------------------------------------------- prose */
 
 .prose { font-size: 1.0625rem; }
-.prose > p, .prose li, .prose dd { hyphens: auto; }
+.prose p:not(.admonition-title), .prose li, .prose dd { hyphens: auto; }
 .prose p { margin: 0 0 1rem; }
 .prose h2, .prose h3, .prose h4, .prose .references h2 {
   font-weight: 600;
