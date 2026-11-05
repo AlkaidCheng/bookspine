@@ -113,7 +113,8 @@ numbers. Each page has its own `references` and reference list.
 `![caption](figures/name.svg)` on a line of its own becomes a numbered figure. A local
 SVG is copied into the page, so it can use the theme's colours and follow the colour
 scheme. A table followed by a paragraph starting `Table:` becomes a numbered table, and
-a table with no caption takes no number. Figures and tables open enlarged when clicked.
+a table with no caption takes no number. A button on each figure and table opens it
+enlarged.
 
 ### Equations
 
@@ -176,7 +177,7 @@ prints on its default paper.
 | `repo_host` | empty | The name in that link, such as `GitHub`. Required with `repo`. |
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
 | `parts` | empty | The parts and chapters, as above. |
-| `enlarge_tables` | `true` | Whether clicking a table opens it enlarged. Figures always do. |
+| `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |

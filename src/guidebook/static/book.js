@@ -100,10 +100,7 @@
   function openLightbox(figure) {
     var copy = figure.cloneNode(true);
     copy.removeAttribute("id");
-    copy.querySelectorAll("a.anchor, [tabindex]").forEach(function (el) {
-      if (el.classList.contains("anchor")) el.remove();
-      else el.removeAttribute("tabindex");
-    });
+    copy.querySelectorAll("a.anchor, .tool-group").forEach(function (el) { el.remove(); });
     lightboxContent.innerHTML = "";
     lightboxContent.appendChild(copy);
     lastFocus = document.activeElement;
@@ -118,18 +115,45 @@
     lightboxContent.innerHTML = "";
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
-  var enlargeable = document.body.getAttribute("data-enlarge-tables") === "false" ? "figure:not(.table)" : "figure";
-  document.querySelectorAll(enlargeable).forEach(function (figure) {
-    var target = figure.querySelector("svg, img, .table-wrap");
-    if (!target) return;
-    target.classList.add("zoomable");
-    target.setAttribute("tabindex", "0");
-    target.setAttribute("role", "button");
-    target.setAttribute("aria-label", "Enlarge");
-    target.addEventListener("click", function () { openLightbox(figure); });
-    target.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(figure); }
-    });
+
+  /* The buttons keep off the text: a caption takes them at the end of its first line,
+     with the text wrapping around them, and a table without one makes room in its header
+     row. export.js adds its button to the same group. */
+  function addToolGroup(figure) {
+    var group = document.createElement("div");
+    var caption = figure.querySelector("figcaption");
+    group.className = "tool-group";
+    figure.classList.add("tool-host");
+    if (caption) {
+      group.classList.add("tool-inline");
+      caption.insertBefore(group, caption.firstChild);
+    } else {
+      group.classList.add("tool-right");
+      figure.classList.add("tool-uncaptioned");
+      figure.appendChild(group);
+    }
+    return group;
+  }
+
+  function enlargeButton(figure) {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "tool-toggle iconbtn";
+    button.title = "Enlarge";
+    button.setAttribute("aria-label", "Enlarge " + (figure.matches(".table") ? "table" : "figure"));
+    button.innerHTML =
+      '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">' +
+      '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    button.addEventListener("click", function () { openLightbox(figure); });
+    return button;
+  }
+
+  var enlargesTables = document.body.getAttribute("data-enlarge-tables") !== "false";
+  document.querySelectorAll("figure").forEach(function (figure) {
+    if (!figure.querySelector("svg, img, .table-wrap")) return;
+    var group = addToolGroup(figure);
+    if (enlargesTables || !figure.matches(".table")) group.appendChild(enlargeButton(figure));
   });
   lightboxClose.addEventListener("click", closeLightbox);
   lightbox.addEventListener("click", function (e) { if (e.target === lightbox) closeLightbox(); });

@@ -218,7 +218,7 @@ class BookConfig:
     parts : tuple of PartConfig
         The book's parts, in reading order.
     enlarge_tables : bool
-        Whether clicking a table opens it enlarged, as it does a figure.
+        Whether a table has a button that opens it enlarged, as a figure does.
     export_menus : bool
         Whether tables, figures, code blocks and equations offer an export menu.
     mathjax_macros : Mapping[str, Any]
