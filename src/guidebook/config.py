@@ -101,6 +101,7 @@ _TEXT_KEYS = (
     "pygments_light",
     "pygments_dark",
 )
+_SWITCH_KEYS = ("enlarge_tables", "export_menus")
 _REQUIRED_KEYS = ("title", "author")
 _PART_KEYS = {"dir", "title", "chapters"}
 _CHAPTER_KEYS = {"dir", "sections"}
@@ -218,6 +219,8 @@ class BookConfig:
         The book's parts, in reading order.
     enlarge_tables : bool
         Whether clicking a table opens it enlarged, as it does a figure.
+    export_menus : bool
+        Whether tables, figures, code blocks and equations offer an export menu.
     mathjax_macros : Mapping[str, Any]
         TeX macros by name, each a definition or ``[definition, argument count]``.
     pygments_light, pygments_dark : str
@@ -234,6 +237,7 @@ class BookConfig:
     edit_url: str = ""
     parts: tuple[PartConfig, ...] = ()
     enlarge_tables: bool = True
+    export_menus: bool = True
     mathjax_macros: Mapping[str, Any] = field(default_factory=dict)
     pygments_light: str = DEFAULT_PYGMENTS_LIGHT
     pygments_dark: str = DEFAULT_PYGMENTS_DARK
@@ -274,10 +278,11 @@ def _config_from_record(record: Any) -> BookConfig:
 
     values = {key: record[key] for key in _TEXT_KEYS if key in record}
     values["parts"] = _parts_from_record(record.get("parts"))
-    if "enlarge_tables" in record:
-        if not isinstance(record["enlarge_tables"], bool):
-            raise BuildError(f"{CONFIG_NAME}: enlarge_tables must be true or false")
-        values["enlarge_tables"] = record["enlarge_tables"]
+    for key in _SWITCH_KEYS:
+        if key in record:
+            if not isinstance(record[key], bool):
+                raise BuildError(f"{CONFIG_NAME}: {key} must be true or false")
+            values[key] = record[key]
     if "mathjax_macros" in record:
         values["mathjax_macros"] = _checked_macros(record["mathjax_macros"])
     return BookConfig(**values)

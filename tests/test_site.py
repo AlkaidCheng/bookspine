@@ -20,7 +20,7 @@ PACKAGE_TEMPLATES = [
     "part.html",
     "section.html",
 ]
-PACKAGE_STATIC = ["book.css", "book.js", "favicon.svg"]
+PACKAGE_STATIC = ["book.css", "book.js", "export.js", "favicon.svg"]
 
 
 def page_text(site_dir: Path, url: str) -> str:
@@ -150,6 +150,17 @@ def test_a_book_can_turn_table_enlarging_off(project_dir: Path) -> None:
     add_to_config(project_dir, "\nenlarge_tables: false\n")
     site_dir = build_book(project_dir).site_dir
     assert 'data-enlarge-tables="false"' in body_tag(page_text(site_dir, "methods"))
+
+
+def test_export_menus_are_on_by_default(site_dir: Path) -> None:
+    assert '<script src="./static/export.js" defer></script>' in page_text(site_dir, "")
+    assert (site_dir / "static" / "export.js").is_file()
+
+
+def test_a_book_can_turn_export_menus_off(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nexport_menus: false\n")
+    site_dir = build_book(project_dir).site_dir
+    assert "export.js" not in page_text(site_dir, "methods")
 
 
 def test_source_and_edit_links_follow_the_config(site_dir: Path) -> None:

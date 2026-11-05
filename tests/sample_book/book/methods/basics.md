@@ -37,3 +37,19 @@ Table: A captioned table.
 ## Further reading
 
 Nothing further.
+
+## Examples
+
+![A raster figure](figures/gradient.png)
+
+| Symbol | Meaning    | Source                                |
+|:-------|:----------:|--------------------------------------:|
+| $x_1$  | **first**  | [a page](https://example.org/a_page)  |
+| `a|b`  | *second*   | 50% of $\vec{p}$ & more               |
+
+Table: Marks of every kind.
+
+```python
+def add(a, b):
+    return a + b
+```

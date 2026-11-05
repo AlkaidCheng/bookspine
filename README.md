@@ -138,6 +138,31 @@ reference list is generated at the end of the page, in order of first citation.
 | `warning`, `caution`, `note`, `tip` | Labelled, with no number. |
 | Any other, such as `summary` | Styled by its own name, with its title as written. |
 
+## Exporting
+
+Every table, figure, code block and display equation has a button that opens a menu of
+file formats. It appears when the cursor is over that component. On a touch screen it
+stays faintly visible, except on a code block, where a tap shows it. It sits at the end
+of a caption, at the top right of a code block or a table without a caption, and at the
+left of an equation. A code block also has a button that copies its source in one click.
+
+| Component | Formats |
+|---|---|
+| Table | Markdown, CSV, LaTeX, PNG, PDF |
+| SVG figure | SVG, PNG, PDF |
+| Other figure | PNG, PDF |
+| Code block | PNG, PDF |
+| Display equation | LaTeX, PNG, PDF |
+
+Exports use the light colour scheme on a white background. Markdown and LaTeX keep a
+table's caption, and images and PDFs leave it out. Every format except PDF can also be
+copied to the clipboard. LaTeX output defines the book's macros it uses, and states the
+packages it needs.
+
+PDF opens the browser's print dialog with the page sized to the component, which keeps
+vectors and fonts: choose "Save as PDF" there. A browser that ignores the page size
+prints on its default paper.
+
 ## Configuration
 
 `book.yaml` takes the keys below, and an unknown key stops the build.
@@ -152,6 +177,7 @@ reference list is generated at the end of the page, in order of first citation.
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
 | `parts` | empty | The parts and chapters, as above. |
 | `enlarge_tables` | `true` | Whether clicking a table opens it enlarged. Figures always do. |
+| `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 
