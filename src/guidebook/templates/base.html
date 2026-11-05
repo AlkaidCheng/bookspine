@@ -20,6 +20,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="{{ page.root }}static/pygments.css">
 <link rel="stylesheet" href="{{ page.root }}static/book.css">
+{# This inline script stays on every page: it holds the parser until the stylesheets
+   arrive, so the scripts at the end of the body do not compete with them. #}
 <script>
 window.MathJax = {
   loader: { load: ["[tex]/tagformat", "[tex]/ams", "[tex]/boldsymbol"] },
@@ -47,7 +49,9 @@ window.MathJax = {
   chtml: { scale: 0.98 }
 };
 </script>
+{% if load_mathjax %}
 <script defer src="{{ mathjax_url }}"></script>
+{% endif %}
 {% block extra_head %}{% endblock %}
 </head>
 <body{% if page.chapter_number %} data-chapter="{{ page.chapter_number }}"{% endif %}{% if page.equation_offset %} data-equation-offset="{{ page.equation_offset }}"{% endif %}{% if not book.enlarge_tables %} data-enlarge-tables="false"{% endif %} class="kind-{{ page.kind }}">

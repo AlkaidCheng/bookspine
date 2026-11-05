@@ -24,7 +24,12 @@ from guidebook.config import (
     Project,
     load_config,
 )
-from guidebook.equations import MATHJAX_URL, number_equations, resolve_equation_refs
+from guidebook.equations import (
+    MATHJAX_URL,
+    needs_mathjax,
+    number_equations,
+    resolve_equation_refs,
+)
 from guidebook.errors import BuildError
 from guidebook.glossary import collect_terms, make_glossary_pages
 from guidebook.pages import Page, load_pages
@@ -279,7 +284,11 @@ def page_files(
     for page in pages:
         try:
             template = environment.get_template(f"{page.kind}.html")
-            page_html = template.render(page=page, parts=parts)
+            page_html = template.render(page=page, parts=parts, load_mathjax=False)
+            # Only the finished page shows all of its text: the sidebar prints headings
+            # from other pages, and an override can print anything.
+            if needs_mathjax(page_html.partition("</head>")[2]):
+                page_html = template.render(page=page, parts=parts, load_mathjax=True)
         except jinja2.TemplateError as error:
             raise BuildError(f"{page.source_path}: template error: {error}") from None
         files[page.output_name] = page_html.encode("utf-8")
