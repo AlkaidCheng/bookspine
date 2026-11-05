@@ -213,7 +213,7 @@
         if (text) runs.push(Object.assign({}, style, { text: text }));
         return;
       }
-      if (child.nodeType !== Node.ELEMENT_NODE || child.matches(".caplabel, .anchor, .export-toggle")) return;
+      if (child.nodeType !== Node.ELEMENT_NODE || child.matches(".caplabel, .anchor, .tool-group")) return;
       if (child.matches(".arithmatex")) {
         runs.push({ text: texOf(child, sources), math: true });
         return;
@@ -726,7 +726,7 @@
     else if (event.key === "Escape") { event.stopPropagation(); closeMenu(); }
   });
   document.addEventListener("pointerdown", function (event) {
-    if (!menu.hidden && !menu.contains(event.target) && event.target.closest(".export-toggle") !== openToggle) {
+    if (!menu.hidden && !menu.contains(event.target) && event.target.closest(".tool-toggle") !== openToggle) {
       closeMenu();
     }
   });
@@ -755,7 +755,7 @@
   function makeToggle(component, title) {
     var toggle = document.createElement("button");
     toggle.type = "button";
-    toggle.className = "export-toggle iconbtn";
+    toggle.className = "tool-toggle iconbtn";
     toggle.innerHTML = icons.save;
     toggle.title = "Export";
     toggle.setAttribute("aria-label", "Export " + title);
@@ -769,21 +769,12 @@
     return toggle;
   }
 
-  /* The button keeps off the text: a caption takes it at the end of its first line, with
-     the text wrapping around it. */
-  function addToLabel(component, title, label) {
-    component.host.classList.add("export-host");
-    var toggle = makeToggle(component, title);
-    toggle.classList.add("export-inline");
-    label.insertBefore(toggle, label.firstChild);
-  }
-
   /* One click copies the code, with no menu in the way. */
   function makeCopyToggle(element) {
     var label = "Copy source";
     var button = document.createElement("button");
     button.type = "button";
-    button.className = "export-toggle iconbtn";
+    button.className = "tool-toggle iconbtn";
     button.title = label;
     button.setAttribute("aria-label", label);
     button.innerHTML = '<span class="export-icon">' + icons.copy + "</span>";
@@ -798,19 +789,17 @@
     return button;
   }
 
-  /* Without a label line the buttons float at a corner. `side` is the corner's side,
-     `element` the component whose margins the host contains, and `inset` their distance
-     from that component's edges. */
+  /* A code block or equation has no caption, so its buttons float at a corner. `side` is
+     the corner's side, `element` the component whose margins the host contains, and
+     `inset` their distance from that component's edges. */
   function makeCorner(component, side, element, inset) {
-    component.host.classList.add("export-host");
+    component.host.classList.add("tool-host");
     var tools = document.createElement("div");
-    tools.className = "export-tools export-" + side;
-    if (element) {
-      var style = getComputedStyle(element);
-      var margin = side === "left" ? style.marginLeft : style.marginRight;
-      tools.style.top = "calc(" + style.marginTop + " + " + inset + ")";
-      tools.style[side] = "calc(" + margin + " + " + inset + ")";
-    }
+    var style = getComputedStyle(element);
+    var margin = side === "left" ? style.marginLeft : style.marginRight;
+    tools.className = "tool-group tool-" + side;
+    tools.style.top = "calc(" + style.marginTop + " + " + inset + ")";
+    tools.style[side] = "calc(" + margin + " + " + inset + ")";
     component.host.appendChild(tools);
     return tools;
   }
@@ -819,22 +808,16 @@
     document.querySelectorAll(".prose figure").forEach(function (figure) {
       var isTable = figure.matches(".table");
       var target = figure.querySelector(isTable ? "table" : "svg, img");
-      if (!target) return;
+      var tools = figure.querySelector(".tool-group");
+      if (!target || !tools) return;
       var title = isTable ? "table" : "figure";
-      var caption = figure.querySelector("figcaption");
-      var component = {
+      tools.appendChild(makeToggle({
         host: figure,
         target: target,
         kind: isTable ? "table" : "figure",
         name: nameOf(figure.querySelector(".caplabel"), title),
         formats: isTable ? tableFormats() : target.matches("svg") ? svgFormats() : imageFormats
-      };
-      if (caption) {
-        addToLabel(component, title, caption);
-      } else {
-        figure.classList.add("export-uncaptioned");
-        makeCorner(component, "right").appendChild(makeToggle(component, title));
-      }
+      }, title));
     });
   }
 
@@ -850,7 +833,7 @@
       var tools = makeCorner(component, "right", element, "0.4rem");
       tools.appendChild(makeCopyToggle(element));
       tools.appendChild(makeToggle(component, "code"));
-      element.addEventListener("click", function () { component.host.classList.toggle("export-tapped"); });
+      element.addEventListener("click", function () { component.host.classList.toggle("tool-tapped"); });
     });
   }
 

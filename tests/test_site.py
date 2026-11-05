@@ -143,7 +143,7 @@ def test_mathjax_comes_from_the_version_the_count_follows(site_dir: Path) -> Non
 def test_tables_enlarge_by_default(site_dir: Path) -> None:
     assert "data-enlarge-tables" not in page_text(site_dir, "")
     book_js = (site_dir / "static" / "book.js").read_text(encoding="utf-8")
-    assert 'getAttribute("data-enlarge-tables") === "false"' in book_js
+    assert 'getAttribute("data-enlarge-tables") !== "false"' in book_js
 
 
 def test_a_book_can_turn_table_enlarging_off(project_dir: Path) -> None:
