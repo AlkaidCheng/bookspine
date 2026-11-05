@@ -139,6 +139,33 @@ reference list is generated at the end of the page, in order of first citation.
 | `warning`, `caution`, `note`, `tip` | Labelled, with no number. |
 | Any other, such as `summary` | Styled by its own name, with its title as written. |
 
+### Glossary
+
+A `\glossary` tag adds a reference to the book's glossary, which follows the last part
+with an opener, a page for terms and a page for equations. The tag prints nothing, as
+LaTeX's `\index` does. Each entry is a name that links to the place it marks, in
+alphabetical order. A page appears once it has an entry, so a book with no tags has no
+glossary.
+
+| Where | Tag | Entry |
+|---|---|---|
+| A paragraph or list item | `\glossary{Name}` | A term that links to this place. |
+| The start of a box | `\glossary` | A term named after the box's title, linking to the box. `\glossary{Name}` gives it another name. |
+| A display equation | `\glossary{Name}` | An equation of that name. It needs a `\label` and a number. |
+
+```markdown
+!!! definition "Jet"
+    \glossary
+    A collimated spray of hadrons.
+
+$$
+\sigma = \int f(x) \, \hat\sigma(x) \label{eq:xsec} \glossary{Factorisation formula}
+$$
+```
+
+The build stops on a name used twice on a page, and on a named equation with no label or
+number.
+
 ## Exporting
 
 Every table, figure, code block and display equation has a button that opens a menu of
@@ -179,6 +206,7 @@ prints on its default paper.
 | `parts` | empty | The parts and chapters, as above. |
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
+| `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} · {{ book.title }}{% endblock %}
+{% block content %}
+<article class="chapter">
+  <header class="chapter-head">
+    {% if page != glossary_page %}
+    <p class="chapter-kicker"><a href="{{ page.href(glossary_page) }}">{{ glossary_page.title }}</a></p>
+    {% endif %}
+    <h1 class="chapter-title">{{ page.title }}</h1>
+    <p class="lede">{{ page.summary }}</p>
+  </header>
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+  {% if page.chapters %}
+  <ol class="chapter-list unnumbered">
+    {% for entry in page.chapters %}
+    <li>
+      <a href="{{ page.href(entry) }}">
+        <span class="chapter-list-body">
+          <span class="chapter-list-title">{{ entry.title }}</span>
+          <span class="chapter-list-summary">{{ entry.summary }}</span>
+        </span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</article>
+{% endblock %}

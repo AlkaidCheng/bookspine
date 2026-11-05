@@ -26,6 +26,7 @@ from guidebook.config import (
 )
 from guidebook.equations import MATHJAX_URL, number_equations, resolve_equation_refs
 from guidebook.errors import BuildError
+from guidebook.glossary import collect_terms, make_glossary_pages
 from guidebook.pages import Page, load_pages
 from guidebook.passes import (
     mark_external_links,
@@ -131,7 +132,7 @@ def build_book(
     )
     config = load_config(project.config_path)
     pages = load_pages(config, project.book_dir)
-    converted = convert_pages(pages, project.book_dir)
+    converted = convert_pages(pages, project.book_dir, config.glossary)
     replace_site(project.site_dir, site_files(project, config, pages, converted))
     return BuildResult(
         site_dir=project.site_dir,
@@ -149,13 +150,25 @@ def make_markdown() -> markdown.Markdown:
     )
 
 
-def convert_pages(pages: list[Page], book_dir: Path) -> ConvertedPages:
+def convert_pages(
+    pages: list[Page], book_dir: Path, has_glossary: bool = True
+) -> ConvertedPages:
     """Turn every page's Markdown into numbered, linked HTML.
+
+    Parameters
+    ----------
+    pages : list of Page
+        The book's pages in reading order, to which the glossary's are appended.
+    book_dir : Path
+        The book's sources.
+    has_glossary : bool, optional
+        Whether ``\\glossary`` tags make glossary pages.
 
     Raises
     ------
     BuildError
-        If a link, figure, citation or equation reference does not resolve.
+        If a link, figure, citation or equation reference does not resolve, or a
+        glossary tag cannot be read.
     """
     md = make_markdown()
     pages_by_source = {page.source_path: page for page in pages}
@@ -168,10 +181,17 @@ def convert_pages(pages: list[Page], book_dir: Path) -> ConvertedPages:
         number_figures_and_tables(page, book_dir)
         number_boxes(page)
         number_equations(page, equation_labels)
+        collect_terms(page)
         converted.warnings += resolve_citations(page, md)
         rewrite_links(page, pages_by_source, converted.assets, book_dir)
         mark_external_links(page)
         converted.search_index += search_entries(page)
+
+    for glossary_page in make_glossary_pages(pages) if has_glossary else []:
+        pages[-1].next = glossary_page
+        glossary_page.prev = pages[-1]
+        pages.append(glossary_page)
+        converted.search_index += search_entries(glossary_page)
 
     # A reference can point forward, so this waits until every page is numbered.
     for page in pages:
@@ -234,6 +254,7 @@ def page_files(
     environment.globals.update(
         book=config,
         build_date=build_date().strftime(BUILD_DATE_FORMAT),
+        glossary_page=next((page for page in pages if page.kind == "glossary"), None),
         mathjax_url=MATHJAX_URL,
     )
     parts = [page for page in pages if page.kind == "part"]
