@@ -152,7 +152,35 @@ def test_a_book_without_macros_defines_none(plain_project_dir: Path) -> None:
 
 
 def test_mathjax_comes_from_the_version_the_count_follows(site_dir: Path) -> None:
-    assert f'<script defer src="{MATHJAX_URL}"></script>' in page_text(site_dir, "")
+    basics = page_text(site_dir, "methods/basics")
+    assert f'<script defer src="{MATHJAX_URL}"></script>' in basics
+
+
+def test_a_page_with_nothing_for_mathjax_leaves_it_out(site_dir: Path) -> None:
+    assert MATHJAX_URL not in page_text(site_dir, "")
+
+
+def test_mathjax_follows_text_that_only_the_finished_page_shows(
+    project_dir: Path,
+) -> None:
+    path = project_dir / "book" / "methods" / "split" / "index.md"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace("A chapter on several pages.", r"The case \\(x\\).")
+    path.write_text(text, encoding="utf-8")
+    build_book(project_dir)
+    assert MATHJAX_URL in page_text(project_dir / "site", "methods")
+    assert MATHJAX_URL not in page_text(project_dir / "site", "help")
+
+
+def test_a_theme_template_can_call_for_mathjax(project_dir: Path) -> None:
+    path = project_dir / "theme" / "templates" / "home.html"
+    path.write_text(
+        '{% extends "guidebook/home.html" %}\n'
+        "{% block content %}\\(x\\){{ super() }}{% endblock %}\n",
+        encoding="utf-8",
+    )
+    build_book(project_dir)
+    assert MATHJAX_URL in page_text(project_dir / "site", "")
 
 
 def test_tables_enlarge_by_default(site_dir: Path) -> None:

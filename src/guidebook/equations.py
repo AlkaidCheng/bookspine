@@ -11,11 +11,17 @@ from dataclasses import dataclass
 
 from guidebook.errors import BuildError
 from guidebook.pages import GlossaryEntry, Page
+from guidebook.passes import CODE_SEGMENT_PATTERN
 
 # The one version that cannot float: the environment sets below copy its rules, so an
 # upgrade must recheck them against tests/test_equations.py.
 # https://github.com/mathjax/MathJax-src/releases/tag/3.2.2
 MATHJAX_URL = "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"
+
+# What MathJax acts on in a page's text as base.html configures it: the delimiters, an
+# environment, a reference, and the escapes \\ and \$.
+# https://github.com/mathjax/MathJax-src/blob/3.2.2/ts/input/tex/FindTeX.ts#L107
+_MATHJAX_TEXT_PATTERN = re.compile(r"\\(?:[(\[\\$]|begin\s*\{|(?:eq)?ref\s*\{)")
 
 # How MathJax numbers a display equation under ``tags: "all"``. These environments own
 # the display's numbers: the first set has one per row, the second one in all, and a
@@ -154,6 +160,15 @@ def equation_rows(tex: str) -> list[EquationRow]:
 def equation_anchor(label: str) -> str:
     """Return the id MathJax gives the equation carrying `label`."""
     return "mjx-eqn:" + re.sub(r"\s", "_", label)
+
+
+def needs_mathjax(page_body: str) -> bool:
+    """Return whether MathJax would change anything in the HTML `page_body`.
+
+    Code is left out because MathJax skips ``pre`` and ``code`` elements.
+    """
+    text = html.unescape(CODE_SEGMENT_PATTERN.sub("", page_body))
+    return _MATHJAX_TEXT_PATTERN.search(text) is not None
 
 
 def number_equations(page: Page, equation_labels: dict[str, tuple[Page, str]]) -> None:

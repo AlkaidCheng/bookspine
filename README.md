@@ -123,7 +123,7 @@ Write inline math as `$…$` and display math as `$$ … $$` on lines of their o
 display equation is numbered, and `\notag` suppresses a number. `\label{eq:name}` and
 `\eqref{eq:name}` reach any page in the book, so a label must be unique across it.
 Place `\label` after `\end{aligned}` or `\end{split}`, because MathJax discards one
-written inside them.
+written inside them. A page with no math does not load MathJax.
 
 ### Citations
 

@@ -7,6 +7,7 @@ import pytest
 
 from guidebook.equations import (
     equation_rows,
+    needs_mathjax,
     number_equations,
     resolve_equation_refs,
 )
@@ -304,3 +305,35 @@ def test_unknown_label_fails(
     chapter.body_html = inline(r"\eqref{eq:missing}")
     with pytest.raises(BuildError, match=r"\\eqref\{eq:missing\} matches no"):
         resolve_equation_refs(chapter, labels)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        r"<p>\(x\)</p>",
+        r"<div>\[x\]</div>",
+        r"<div>\begin{align}x\end{align}</div>",
+        r"\begin {align}",
+        r"see \eqref{eq:a}",
+        r"see \ref {eq:a}",
+        r"two \\ backslashes",
+        r"a \$ sign",
+        "&#92;(x",
+    ],
+)
+def test_text_that_mathjax_acts_on_needs_it(text: str) -> None:
+    assert needs_mathjax(text)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "<p>Plain text with $x$ and $$y$$.</p>",
+        r"<p>C:\dir and \alpha</p>",
+        r"<code>\(x\)</code>",
+        r'<pre class="a">\[x\]</pre>',
+        "",
+    ],
+)
+def test_text_that_mathjax_leaves_alone_does_not_need_it(text: str) -> None:
+    assert not needs_mathjax(text)
