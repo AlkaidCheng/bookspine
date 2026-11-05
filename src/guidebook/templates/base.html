@@ -137,9 +137,14 @@ window.MathJax = {
         </ol>
       </section>
       {% endif %}
-      {% if book.repo %}
+      {% if help_page or book.repo %}
       <div class="sidebar-foot">
+        {% if help_page %}
+        <a href="{{ page.href(help_page) }}"{% if page == help_page %} aria-current="page"{% endif %}>{{ help_page.title }}</a>
+        {% endif %}
+        {% if book.repo %}
         <a href="{{ book.repo }}" class="external" rel="noopener">Source on {{ book.repo_host }}</a>
+        {% endif %}
       </div>
       {% endif %}
     </div>

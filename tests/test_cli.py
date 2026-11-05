@@ -22,7 +22,7 @@ def test_build_reports_what_it_wrote(
 ) -> None:
     assert main(["build", str(project_dir)]) == 0
     output = capsys.readouterr().out
-    assert "built 9 pages (2 chapters) into" in output
+    assert "built 10 pages (2 chapters) into" in output
     assert str(project_dir / "site") in output
 
 

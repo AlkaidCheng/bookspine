@@ -215,7 +215,9 @@ kbd {
 .toc-subsections { margin-bottom: 0.2rem; }
 .toc-subsections > li > a { grid-template-columns: 2.6rem 1fr; }
 .sidebar-foot { margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px solid var(--rule); font-size: 0.78rem; }
-.sidebar-foot a { color: var(--ink-3); }
+.sidebar-foot a { display: block; color: var(--ink-3); }
+.sidebar-foot a + a { margin-top: 0.35rem; }
+.sidebar-foot a[aria-current="page"] { color: var(--accent-ink); }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 35; }
 
 .content {

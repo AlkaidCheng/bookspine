@@ -31,6 +31,7 @@ def test_defaults_fill_every_optional_key(tmp_path: Path) -> None:
     assert config.parts == ()
     assert config.enlarge_tables is True
     assert config.export_menus is True
+    assert config.help_page == ""
     assert config.mathjax_macros == {}
     assert config.pygments_light == DEFAULT_PYGMENTS_LIGHT
     assert config.pygments_dark == DEFAULT_PYGMENTS_DARK
@@ -42,12 +43,14 @@ def test_book_keys_override_the_defaults(tmp_path: Path) -> None:
             tmp_path,
             enlarge_tables=False,
             pygments_light="default",
+            help_page="help.md",
             repo="https://example.org/repo",
             repo_host="ExampleHost",
         )
     )
     assert config.enlarge_tables is False
     assert config.pygments_light == "default"
+    assert config.help_page == "help.md"
     assert config.repo_host == "ExampleHost"
 
 
@@ -85,6 +88,10 @@ def test_macros_keep_their_order_and_definitions(tmp_path: Path) -> None:
         ({"title": ""}, "needs a title"),
         ({"author": ""}, "needs a author"),
         ({"subtitle": 3}, "subtitle must be text"),
+        ({"help_page": 3}, "help_page must be text"),
+        ({"help_page": ""}, "one plain path component"),
+        ({"help_page": "../help.md"}, "one plain path component"),
+        ({"help_page": "part/help.md"}, "one plain path component"),
         ({"repo": "https://example.org"}, "repo needs a repo_host"),
         ({"enlarge_tables": "no"}, "enlarge_tables must be true or false"),
         ({"export_menus": 1}, "export_menus must be true or false"),

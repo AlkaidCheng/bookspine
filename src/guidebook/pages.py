@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from guidebook.config import OPENER_NAME, BookConfig
+from guidebook.config import CONFIG_NAME, OPENER_NAME, BookConfig
 from guidebook.errors import BuildError
 
 _FRONT_MATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
@@ -52,12 +52,13 @@ class GlossaryEntry:
 # and the fields link pages to one another.
 @dataclass(eq=False)
 class Page:
-    """One output page: home, a part opener, a chapter, a section or the glossary.
+    """One output page: home, a part opener, a chapter, a section or a generated page.
 
     Parameters
     ----------
     kind : str
-        ``"home"``, ``"part"``, ``"chapter"``, ``"section"`` or ``"glossary"``.
+        ``"home"``, ``"part"``, ``"chapter"``, ``"section"``, ``"glossary"`` or
+        ``"help"``.
     source_path : Path
         The Markdown source, relative to ``book/``.
     url : str
@@ -203,8 +204,27 @@ def read_page(book_dir: Path, kind: str, source_path: Path, url: str) -> Page:
     )
 
 
+def read_help_page(name: str, book_dir: Path, pages: list[Page]) -> Page:
+    """Read the help page `name`, which takes its address from the file's name.
+
+    Raises
+    ------
+    BuildError
+        If the file is one of `pages` or its address is taken by one of them.
+    """
+    help_page = read_page(book_dir, "help", Path(name), f"{PurePosixPath(name).stem}/")
+    for page in pages:
+        if help_page.source_path == page.source_path or help_page.url == page.url:
+            raise BuildError(
+                f"{CONFIG_NAME}: help_page {name} clashes with {page.source_path}"
+            )
+    return help_page
+
+
 def load_pages(config: BookConfig, book_dir: Path) -> list[Page]:
     """Read every page `config` lists and return them in reading order.
+
+    A help page stands outside that order: it comes last, with no neighbours.
 
     Raises
     ------
@@ -248,4 +268,6 @@ def load_pages(config: BookConfig, book_dir: Path) -> list[Page]:
     for before, after in zip(pages, pages[1:], strict=False):
         before.next = after
         after.prev = before
+    if config.help_page:
+        pages.append(read_help_page(config.help_page, book_dir, pages))
     return pages

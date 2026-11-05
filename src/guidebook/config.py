@@ -111,6 +111,7 @@ _TEXT_KEYS = (
     "repo",
     "repo_host",
     "edit_url",
+    "help_page",
     "pygments_light",
     "pygments_dark",
 )
@@ -228,6 +229,8 @@ class BookConfig:
         The name in the sidebar's link text, such as ``GitHub``.
     edit_url : str
         The prefix of a page's edit link, followed by its path under ``book/``.
+    help_page : str
+        The Markdown file in ``book/`` linked from the foot of the sidebar.
     parts : tuple of PartConfig
         The book's parts, in reading order.
     enlarge_tables : bool
@@ -250,6 +253,7 @@ class BookConfig:
     repo: str = ""
     repo_host: str = ""
     edit_url: str = ""
+    help_page: str = ""
     parts: tuple[PartConfig, ...] = ()
     enlarge_tables: bool = True
     export_menus: bool = True
@@ -293,6 +297,8 @@ def _config_from_record(record: Any) -> BookConfig:
         raise BuildError(f"{CONFIG_NAME}: repo needs a repo_host, such as GitHub")
 
     values = {key: record[key] for key in _TEXT_KEYS if key in record}
+    if "help_page" in values:
+        require_path_component(values["help_page"], what="The help_page")
     values["parts"] = _parts_from_record(record.get("parts"))
     for key in _SWITCH_KEYS:
         if key in record:

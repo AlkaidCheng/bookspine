@@ -6,3 +6,4 @@
 - Add export menus to tables, figures, code blocks and equations, controlled by the `export_menus` key (#2).
 - Open figures and tables enlarged from a button instead of a click on them, as `enlarge_tables` now describes (#3).
 - Add the `\glossary` tag, which indexes terms and equations on glossary pages, controlled by the `glossary` key (#4).
+- Add the `help_page` key, which names a page of conventions and resources linked from the foot of the sidebar (#5).
