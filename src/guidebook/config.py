@@ -115,7 +115,7 @@ _TEXT_KEYS = (
     "pygments_light",
     "pygments_dark",
 )
-_SWITCH_KEYS = ("enlarge_tables", "export_menus", "glossary")
+_SWITCH_KEYS = ("enlarge_tables", "export_menus", "glossary", "wrap_code")
 _REQUIRED_KEYS = ("title", "author")
 _PART_KEYS = {"dir", "title", "chapters"}
 _CHAPTER_KEYS = {"dir", "sections"}
@@ -239,6 +239,8 @@ class BookConfig:
         Whether tables, figures, code blocks and equations offer an export menu.
     glossary : bool
         Whether ``\\glossary`` tags make glossary pages.
+    wrap_code : bool
+        Whether a long line of code wraps instead of scrolling.
     mathjax_macros : Mapping[str, Any]
         TeX macros by name, each a definition or ``[definition, argument count]``.
     pygments_light, pygments_dark : str
@@ -258,6 +260,7 @@ class BookConfig:
     enlarge_tables: bool = True
     export_menus: bool = True
     glossary: bool = True
+    wrap_code: bool = True
     mathjax_macros: Mapping[str, Any] = field(default_factory=dict)
     pygments_light: str = DEFAULT_PYGMENTS_LIGHT
     pygments_dark: str = DEFAULT_PYGMENTS_DARK

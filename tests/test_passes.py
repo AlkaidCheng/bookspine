@@ -1,5 +1,7 @@
 """Tests for the passes over a page's HTML."""
 
+import html
+import re
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,7 @@ from guidebook.passes import (
     resolve_citations,
     rewrite_links,
     search_entries,
+    split_code_lines,
     url_with_breaks,
 )
 from guidebook.site import make_markdown
@@ -297,6 +300,78 @@ def test_a_url_may_break_between_its_elements(text: str, expected: str) -> None:
 
 def test_an_address_with_nothing_to_break_on_is_kept_whole() -> None:
     assert url_with_breaks("example") == "example"
+
+
+def code_page(source: str) -> Page:
+    md = make_markdown()
+    return make_page(md.convert(source))
+
+
+def code_text(page: Page) -> str:
+    match = re.search(r"<code>(.*)</code>", page.body_html, re.S)
+    assert match is not None
+    return html.unescape(re.sub(r"<[^>]+>", "", match.group(1)))
+
+
+def test_each_line_of_code_gets_a_span_with_its_indentation() -> None:
+    page = code_page("```python\ndef f():\n    return 1\n```\n")
+    split_code_lines(page)
+    assert '<code><span class="line"><span class="k">def' in page.body_html
+    assert '<span class="line" style="--indent:4">    <span class="k">return' in (
+        page.body_html
+    )
+    assert page.body_html.count('class="line"') == 2
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "```python\nx = 1\n\n\ny = 2\n```\n",
+        '```python\nx = """a\n  b\n"""\n```\n',
+        '```python hl_lines="2"\nx = 1\ny = 2\nz = 3\n```\n',
+        "```\n  a < b && c\n```\n",
+        "    indented\n      more\n",
+    ],
+)
+def test_splitting_code_keeps_its_text_and_balances_its_spans(source: str) -> None:
+    page = code_page(source)
+    text = code_text(page)
+    split_code_lines(page)
+    assert code_text(page) == text
+    code = page.body_html.split("<code>")[1].split("</code>")[0]
+    lines = re.findall(r'<span class="line"[^>]*>.*?\n</span>', code, re.S)
+    assert "".join(lines) == code
+    assert len(lines) == text.count("\n")
+    for line in lines:
+        assert line.count("<span") == line.count("</span>")
+
+
+def test_each_newline_stays_inside_its_line() -> None:
+    page = code_page("```\na\n\nb\n```\n")
+    split_code_lines(page)
+    assert (
+        '<code><span class="line">a\n</span><span class="line">\n</span>'
+        '<span class="line">b\n</span></code>'
+    ) in page.body_html
+
+
+def test_a_block_with_a_title_is_split() -> None:
+    page = code_page('```python title="a.py"\nx = 1\n```\n')
+    split_code_lines(page)
+    assert 'class="line"' in page.body_html
+
+
+def test_a_block_with_line_numbers_is_left_alone() -> None:
+    page = code_page('```python linenums="1"\nx = 1\n```\n')
+    before = page.body_html
+    split_code_lines(page)
+    assert page.body_html == before
+
+
+def test_inline_code_is_left_alone() -> None:
+    page = make_page("<p><code>a\nb</code></p>")
+    split_code_lines(page)
+    assert page.body_html == "<p><code>a\nb</code></p>"
 
 
 def test_search_has_one_entry_per_section() -> None:

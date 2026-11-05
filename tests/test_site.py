@@ -167,6 +167,18 @@ def test_a_book_can_turn_table_enlarging_off(project_dir: Path) -> None:
     assert 'data-enlarge-tables="false"' in body_tag(page_text(site_dir, "methods"))
 
 
+def test_code_wraps_by_default(site_dir: Path) -> None:
+    assert '<span class="line">' in page_text(site_dir, "methods/basics")
+
+
+def test_a_book_can_turn_code_wrapping_off(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nwrap_code: false\n")
+    build_book(project_dir)
+    basics = page_text(project_dir / "site", "methods/basics")
+    assert "<code><span" in basics
+    assert 'class="line"' not in basics
+
+
 def test_export_menus_are_on_by_default(site_dir: Path) -> None:
     assert '<script src="./static/export.js" defer></script>' in page_text(site_dir, "")
     assert (site_dir / "static" / "export.js").is_file()

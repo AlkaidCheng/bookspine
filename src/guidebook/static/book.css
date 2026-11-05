@@ -366,6 +366,17 @@ code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal;
 }
 .highlight pre { margin: 0; padding: 0.9rem 1.1rem; }
 .highlight pre code { white-space: pre; }
+/* A lexer's error token means it could not parse the code, not that the code is wrong. */
+.highlight .err, [data-theme="dark"] .highlight .err { background: none; border: 0; color: inherit; }
+/* A long line continues past its own indentation, or at half the block's width. */
+.highlight .line {
+  --hang: min(calc((var(--indent, 0) + 2) * 1ch), 50%);
+  display: block;
+  padding-left: var(--hang);
+  text-indent: calc(-1 * var(--hang));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 :root[data-theme="dark"] .highlight { background: var(--code-bg) !important; }
 .highlight .filename, .highlight-title {
   display: block;
@@ -826,6 +837,7 @@ figure.tool-host:hover > figcaption > .tool-group > .tool-toggle,
 }
 .export-stage figure, .export-stage .highlight, .export-stage .arithmatex { margin: 0; }
 .export-stage .highlight, .export-stage .arithmatex { overflow: visible; }
+.export-stage .highlight .line { padding-left: 0; text-indent: 0; white-space: pre; }
 @media print {
   .tool-group, .export-menu { display: none !important; }
   .export-printing body > :not(.export-stage) { display: none !important; }
