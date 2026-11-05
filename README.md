@@ -140,19 +140,19 @@ reference list is generated at the end of the page, in order of first citation.
 
 ## Exporting
 
-Every table, figure, code block, display equation and box has a button that opens a menu
-of file formats. It appears when the cursor is over that component, and stays faintly
-visible on a touch screen. It sits at the end of a caption or box title, in the corner of
-a code block or a table without a caption, and at the left of an equation.
+Every table, figure, code block and display equation has a button that opens a menu of
+file formats. It appears when the cursor is over that component. On a touch screen it
+stays faintly visible, except on a code block, where a tap shows it. It sits at the end
+of a caption, at the top right of a code block or a table without a caption, and at the
+left of an equation. A code block also has a button that copies its source in one click.
 
 | Component | Formats |
 |---|---|
 | Table | Markdown, CSV, LaTeX, PNG, PDF |
 | SVG figure | SVG, PNG, PDF |
 | Other figure | PNG, PDF |
-| Code block | Source file, PNG, PDF |
+| Code block | PNG, PDF |
 | Display equation | LaTeX, PNG, PDF |
-| Box | PNG, PDF |
 
 Exports use the light colour scheme on a white background. Markdown and LaTeX keep a
 table's caption, and images and PDFs leave it out. Every format except PDF can also be
@@ -177,7 +177,7 @@ prints on its default paper.
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
 | `parts` | empty | The parts and chapters, as above. |
 | `enlarge_tables` | `true` | Whether clicking a table opens it enlarged. Figures always do. |
-| `export_menus` | `true` | Whether tables, figures, code, equations and boxes offer an [export menu](#exporting). |
+| `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 

@@ -1,5 +1,5 @@
-/* Export menus: a button on each table, figure, code block, display equation and box
-   opens a menu of file formats. Text formats are read from the page, PNG is drawn on a
+/* Export menus: a button on each table, figure, code block and display equation opens a
+   menu of file formats. Text formats are read from the page, PNG is drawn on a
    canvas with the page's own fonts, and PDF goes through the browser's print dialog,
    which keeps vectors and fonts. Exports always use the light colour scheme. */
 (function () {
@@ -33,9 +33,6 @@
 
   /* Column markers of a GitHub Flavored Markdown table: https://github.github.com/gfm/#tables-extension- */
   var MARKDOWN_COLUMNS = { left: ":---", center: ":---:", right: "---:" };
-
-  /* File extensions of highlighting languages, where they differ from the name. */
-  var CODE_EXTENSIONS = { apacheconf: "conf", bash: "sh", python: "py", text: "txt" };
 
   /* ----------------------------------------------------------- text formats */
 
@@ -157,10 +154,7 @@
     return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   }
 
-  function codeExtension(language) { return CODE_EXTENSIONS[language] || language || "txt"; }
-
   var formats = {
-    codeExtension: codeExtension,
     equationLatex: equationLatex,
     macroDefinitions: macroDefinitions,
     resolveVariables: resolveVariables,
@@ -252,11 +246,6 @@
 
   function equationTex(element) { return texOf(element, mathSources(element)); }
 
-  function codeLanguage(element) {
-    var match = /(?:^|\s)language-([\w+-]+)/.exec(element.className);
-    return match ? match[1] : "";
-  }
-
   /* --------------------------------------------------------- staging */
 
   /* Show computed colours as the light scheme has them; returns the way back. */
@@ -273,7 +262,6 @@
     stage.className = "export-stage prose";
     var holder = document.createElement(component.kind === "figure" ? "figure" : "div");
     var copy = target.cloneNode(true);
-    copy.querySelectorAll(".export-toggle, .anchor").forEach(function (item) { item.remove(); });
     copy.removeAttribute("tabindex");
     holder.appendChild(copy);
     stage.appendChild(holder);
@@ -604,14 +592,6 @@
     return [format].concat(imageFormats);
   }
 
-  function codeFormats(element) {
-    var extension = codeExtension(codeLanguage(element));
-    var format = textFormat("Source (." + extension + ")", extension, function (component) {
-      return component.target.querySelector("code").textContent;
-    });
-    return [format].concat(imageFormats);
-  }
-
   function equationFormats() {
     var format = textFormat("LaTeX", "tex", function (component) {
       return equationLatex(equationTex(component.target), macros());
@@ -789,8 +769,8 @@
     return toggle;
   }
 
-  /* The button keeps off the text. A caption or title takes it at the end of its first
-     line, with the text wrapping around it. */
+  /* The button keeps off the text: a caption takes it at the end of its first line, with
+     the text wrapping around it. */
   function addToLabel(component, title, label) {
     component.host.classList.add("export-host");
     var toggle = makeToggle(component, title);
@@ -798,20 +778,41 @@
     label.insertBefore(toggle, label.firstChild);
   }
 
-  /* Without a label line it floats at a corner. `side` is the corner's side, `element`
-     the component whose margins the host contains, and `offset` the button's distance
-     from that component's top edge. */
-  function addToCorner(component, title, side, element, offset) {
+  /* One click copies the code, with no menu in the way. */
+  function makeCopyToggle(element) {
+    var label = "Copy source";
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "export-toggle iconbtn";
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.innerHTML = '<span class="export-icon">' + icons.copy + "</span>";
+    button.addEventListener("click", function () {
+      copyText(element.querySelector("code").textContent.replace(/\n$/, "")).then(function () {
+        flash(button, icons.done, "Copied");
+      }).catch(function (error) {
+        console.error(error);
+        flash(button, icons.failed, "Could not copy");
+      });
+    });
+    return button;
+  }
+
+  /* Without a label line the buttons float at a corner. `side` is the corner's side,
+     `element` the component whose margins the host contains, and `inset` their distance
+     from that component's edges. */
+  function makeCorner(component, side, element, inset) {
     component.host.classList.add("export-host");
-    var toggle = makeToggle(component, title);
+    var tools = document.createElement("div");
+    tools.className = "export-tools export-" + side;
     if (element) {
       var style = getComputedStyle(element);
       var margin = side === "left" ? style.marginLeft : style.marginRight;
-      toggle.style.top = "calc(" + style.marginTop + " + " + offset + ")";
-      toggle.style[side] = "calc(" + margin + " + 0.5rem)";
+      tools.style.top = "calc(" + style.marginTop + " + " + inset + ")";
+      tools.style[side] = "calc(" + margin + " + " + inset + ")";
     }
-    toggle.classList.add("export-" + side);
-    component.host.appendChild(toggle);
+    component.host.appendChild(tools);
+    return tools;
   }
 
   function addFigureToggles() {
@@ -832,40 +833,42 @@
         addToLabel(component, title, caption);
       } else {
         figure.classList.add("export-uncaptioned");
-        addToCorner(component, title, "right");
+        makeCorner(component, "right").appendChild(makeToggle(component, title));
       }
     });
   }
 
-  function addWrappedToggles(selector, title, makeFormats, side, offset) {
-    document.querySelectorAll(selector).forEach(function (element) {
-      addToCorner({
+  function addCodeToggles() {
+    document.querySelectorAll(".prose div.highlight").forEach(function (element) {
+      var component = {
         host: wrapInHost(element),
         target: element,
-        kind: title,
-        name: nameOf(null, title),
-        formats: makeFormats(element)
-      }, title, side, element, offset);
+        kind: "code",
+        name: nameOf(null, "code"),
+        formats: imageFormats
+      };
+      var tools = makeCorner(component, "right", element, "0.4rem");
+      tools.appendChild(makeCopyToggle(element));
+      tools.appendChild(makeToggle(component, "code"));
+      element.addEventListener("click", function () { component.host.classList.toggle("export-tapped"); });
     });
   }
 
-  function addBoxToggles() {
-    document.querySelectorAll(".prose div.admonition").forEach(function (box) {
-      addToLabel({
-        host: box,
-        target: box,
-        kind: "box",
-        name: nameOf(box.querySelector(".boxlabel"), "box"),
-        formats: imageFormats
-      }, "box", box.querySelector(".admonition-title"));
+  /* An equation's number sits at the right, and its left edge is free. */
+  function addEquationToggles() {
+    document.querySelectorAll(".prose div.arithmatex").forEach(function (element) {
+      var component = {
+        host: wrapInHost(element),
+        target: element,
+        kind: "equation",
+        name: nameOf(null, "equation"),
+        formats: equationFormats()
+      };
+      makeCorner(component, "left", element, "0.25rem").appendChild(makeToggle(component, "equation"));
     });
   }
 
   addFigureToggles();
-  /* A long line of code scrolls under anything over the block, so the button sits on
-     the block's top edge, clear of the first line. */
-  addWrappedToggles(".prose div.highlight", "code", codeFormats, "right", "-0.8rem");
-  /* An equation's number sits at the right, and its left edge is free. */
-  addWrappedToggles(".prose div.arithmatex", "equation", equationFormats, "left", "0.25rem");
-  addBoxToggles();
+  addCodeToggles();
+  addEquationToggles();
 })();

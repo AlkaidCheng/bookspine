@@ -160,11 +160,5 @@ test("CSS variables take the page's value, then their fallback", () => {
 
 test("names become file names", () => {
   assert.equal(formats.slug("Table 1.2"), "table-1-2");
-  assert.equal(formats.slug("  Definition 3.1 "), "definition-3-1");
-});
-
-test("code files take the usual extension", () => {
-  assert.equal(formats.codeExtension("python"), "py");
-  assert.equal(formats.codeExtension("sql"), "sql");
-  assert.equal(formats.codeExtension(""), "txt");
+  assert.equal(formats.slug("  Figure 3.1 "), "figure-3-1");
 });

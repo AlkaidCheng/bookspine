@@ -57,11 +57,7 @@ MARKDOWN_EXTENSION_CONFIGS: dict[str, dict[str, Any]] = {
         "BACKLINK_TITLE": "Back to text",
     },
     "pymdownx.arithmatex": {"generic": True},
-    "pymdownx.highlight": {
-        "css_class": "highlight",
-        "guess_lang": False,
-        "pygments_lang_class": True,
-    },
+    "pymdownx.highlight": {"css_class": "highlight", "guess_lang": False},
     "smarty": {"smart_angled_quotes": False},
 }
 
@@ -224,7 +220,7 @@ class BookConfig:
     enlarge_tables : bool
         Whether clicking a table opens it enlarged, as it does a figure.
     export_menus : bool
-        Whether tables, figures, code, equations and boxes offer an export menu.
+        Whether tables, figures, code blocks and equations offer an export menu.
     mathjax_macros : Mapping[str, Any]
         TeX macros by name, each a definition or ``[definition, argument count]``.
     pygments_light, pygments_dark : str
