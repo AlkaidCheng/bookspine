@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from guidebook import BuildError, BuildResult, build_book
-from guidebook.equations import MATHJAX_URL
-from guidebook.safe_paths import STAMP_NAME
-from guidebook.site import read_traversable
+from bookspine import BuildError, BuildResult, build_book
+from bookspine.equations import MATHJAX_URL
+from bookspine.safe_paths import STAMP_NAME
+from bookspine.site import read_traversable
 
 PACKAGE_TEMPLATES = [
     "base.html",
@@ -175,7 +175,7 @@ def test_mathjax_follows_text_that_only_the_finished_page_shows(
 def test_a_theme_template_can_call_for_mathjax(project_dir: Path) -> None:
     path = project_dir / "theme" / "templates" / "home.html"
     path.write_text(
-        '{% extends "guidebook/home.html" %}\n'
+        '{% extends "bookspine/home.html" %}\n'
         "{% block content %}\\(x\\){{ super() }}{% endblock %}\n",
         encoding="utf-8",
     )
@@ -419,7 +419,7 @@ def test_windows_line_endings_in_a_source_change_nothing(project_dir: Path) -> N
 
 
 def test_the_package_holds_its_templates_and_static_files() -> None:
-    package_dir = resources.files("guidebook")
+    package_dir = resources.files("bookspine")
     templates = read_traversable(package_dir / "templates", "templates")
     static = read_traversable(package_dir / "static", "static")
     assert sorted(templates) == [f"templates/{name}" for name in PACKAGE_TEMPLATES]

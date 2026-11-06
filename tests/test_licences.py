@@ -31,7 +31,7 @@ def test_every_linked_crate_has_a_notice() -> None:
     listing = subprocess.run(
         LINKED_CRATES_COMMAND, capture_output=True, check=True, text=True
     ).stdout
-    crates = {line.split()[0] for line in listing.splitlines()} - {"guidebook"}
+    crates = {line.split()[0] for line in listing.splitlines()} - {"bookspine"}
     noticed = {
         line.split()[0]
         for line in NOTICE_PATH.read_text(encoding="utf-8").splitlines()

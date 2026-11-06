@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from guidebook import __version__
-from guidebook.errors import BuildError
-from guidebook.safe_paths import (
+from bookspine import __version__
+from bookspine.errors import BuildError
+from bookspine.safe_paths import (
     STAMP_NAME,
     replace_site,
     require_path_component,
@@ -153,7 +153,7 @@ def test_a_new_folder_gets_the_files_and_a_stamp(built_site_dir: Path) -> None:
 
 def test_the_stamp_names_its_producer_and_version(built_site_dir: Path) -> None:
     record = json.loads((built_site_dir / STAMP_NAME).read_text(encoding="utf-8"))
-    assert record["producer"] == "guidebook"
+    assert record["producer"] == "bookspine"
     assert record["version"] == __version__
 
 
@@ -209,7 +209,7 @@ def test_a_folder_without_a_stamp_stops_the_build(site_dir: Path) -> None:
     site_dir.mkdir(parents=True)
     keepsake_path = site_dir / "index.html"
     keepsake_path.write_text("not from a build")
-    with pytest.raises(BuildError, match="no .guidebook-stamp.json"):
+    with pytest.raises(BuildError, match="no .bookspine-stamp.json"):
         replace_site(site_dir, FILES)
     assert keepsake_path.read_text(encoding="utf-8") == "not from a build"
     assert sorted(path.name for path in site_dir.iterdir()) == ["index.html"]
@@ -231,8 +231,8 @@ def test_an_unlisted_entry_the_build_needs_stops_it(built_site_dir: Path) -> Non
         "not json",
         "[]",
         '{"producer": "other", "entries": []}',
-        '{"producer": "guidebook"}',
-        '{"producer": "guidebook", "entries": "hep"}',
+        '{"producer": "bookspine"}',
+        '{"producer": "bookspine", "entries": "hep"}',
     ],
 )
 def test_a_stamp_from_elsewhere_stops_the_build(
@@ -248,7 +248,7 @@ def test_a_stamp_from_elsewhere_stops_the_build(
 def test_a_stamp_cannot_name_anything_outside_the_folder(
     built_site_dir: Path, entry: str
 ) -> None:
-    stamp = {"producer": "guidebook", "entries": ["hep", entry]}
+    stamp = {"producer": "bookspine", "entries": ["hep", entry]}
     (built_site_dir / STAMP_NAME).write_text(json.dumps(stamp))
     with pytest.raises(BuildError, match="must be one plain path component"):
         replace_site(built_site_dir, FILES)

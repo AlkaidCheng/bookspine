@@ -7,8 +7,8 @@
 # Dependencies float, so the crates have no lock file.
 /rust/target/
 /rust/Cargo.lock
-/src/guidebook/_markdown*.so
-/src/guidebook/_markdown*.pyd
+/src/bookspine/_markdown*.so
+/src/bookspine/_markdown*.pyd
 
 # ---- Python --------------------------------------------------------------
 __pycache__/

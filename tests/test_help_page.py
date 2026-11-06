@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from guidebook import BuildError, build_book
-from guidebook.config import load_config
-from guidebook.pages import load_pages
+from bookspine import BuildError, build_book
+from bookspine.config import load_config
+from bookspine.pages import load_pages
 
 HELP_NAME = "help.md"
 HELP_URL = "help/"

@@ -5,7 +5,7 @@ requires = ["maturin>=1.9.3"]
 build-backend = "maturin"
 
 [project]
-name = "guidebook"
+name = "bookspine"
 version = "0.1.0"
 description = "Build a textbook-style static site from Markdown chapters."
 readme = "README.md"
@@ -39,16 +39,16 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/AlkaidCheng/guidebook"
-Repository = "https://github.com/AlkaidCheng/guidebook"
-Issues = "https://github.com/AlkaidCheng/guidebook/issues"
+Homepage = "https://github.com/AlkaidCheng/bookspine"
+Repository = "https://github.com/AlkaidCheng/bookspine"
+Issues = "https://github.com/AlkaidCheng/bookspine/issues"
 
 [project.scripts]
-guidebook = "guidebook.cli:main"
+bookspine = "bookspine.cli:main"
 
 [tool.maturin]
 manifest-path = "rust/Cargo.toml"
-module-name = "guidebook._markdown"
+module-name = "bookspine._markdown"
 python-source = "src"
 
 [tool.pytest.ini_options]
@@ -71,6 +71,6 @@ ignore = ["E501"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
-files = ["src/guidebook"]
+files = ["src/bookspine"]
 # types-Pygments leaves HtmlFormatter.get_style_defs without annotations.
 untyped_calls_exclude = ["pygments"]

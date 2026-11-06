@@ -9,9 +9,9 @@ import html
 import re
 from dataclasses import dataclass
 
-from guidebook.errors import BuildError
-from guidebook.pages import GlossaryEntry, Page
-from guidebook.passes import CODE_SEGMENT_PATTERN
+from bookspine.errors import BuildError
+from bookspine.pages import GlossaryEntry, Page
+from bookspine.passes import CODE_SEGMENT_PATTERN
 
 # The one version that cannot float: the environment sets below copy its rules, so an
 # upgrade must recheck them against tests/test_equations.py.

@@ -4,8 +4,8 @@ from importlib.metadata import version
 
 import pytest
 
-import guidebook
-from guidebook import _markdown
+import bookspine
+from bookspine import _markdown
 
 
 def test_commonmark_needs_no_extension() -> None:
@@ -39,4 +39,4 @@ def test_an_unknown_option_bit_is_refused() -> None:
 
 
 def test_the_package_reports_the_version_it_was_installed_as() -> None:
-    assert guidebook.__version__ == version("guidebook")
+    assert bookspine.__version__ == version("bookspine")

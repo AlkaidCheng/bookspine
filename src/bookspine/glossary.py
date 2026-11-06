@@ -3,7 +3,7 @@
 The tag marks a place and prints nothing, as LaTeX's ``\\index`` does. In a paragraph
 ``\\glossary{Name}`` makes a term of that place. At the start of a box a bare
 ``\\glossary`` takes the box's title as the name. Named equations are read in
-:mod:`guidebook.equations`, where the same tag names a display equation.
+:mod:`bookspine.equations`, where the same tag names a display equation.
 """
 
 import html
@@ -11,7 +11,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from guidebook.config import (
+from bookspine.config import (
     GLOSSARY_EQUATIONS_NOUN,
     GLOSSARY_EQUATIONS_SUMMARY,
     GLOSSARY_EQUATIONS_TITLE,
@@ -24,9 +24,9 @@ from guidebook.config import (
     GLOSSARY_TITLE,
     GLOSSARY_URL,
 )
-from guidebook.errors import BuildError
-from guidebook.pages import GlossaryEntry, Page
-from guidebook.passes import CODE_SEGMENT_PATTERN
+from bookspine.errors import BuildError
+from bookspine.pages import GlossaryEntry, Page
+from bookspine.passes import CODE_SEGMENT_PATTERN
 
 _TAG_PATTERN = re.compile(r"\\glossary(?![A-Za-z])(?:\{([^{}]*)\})?[ \t]*\n?")
 _BOX_TAG_PATTERN = re.compile(

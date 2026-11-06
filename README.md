@@ -1,12 +1,12 @@
-# guidebook
+# bookspine
 
-guidebook turns a directory of Markdown chapters into a textbook-style static site,
+bookspine turns a directory of Markdown chapters into a textbook-style static site,
 with numbered parts, chapters, sections, equations, figures, tables and boxed
 environments, citations, client-side search, and light and dark colour schemes. The
 theme comes with the package, so a book holds only its content and one configuration
 file.
 
-![The build reads book.yaml and the Markdown pages, converts them to HTML, numbers and resolves them, applies the theme and writes the site.](https://raw.githubusercontent.com/AlkaidCheng/guidebook/main/docs/pipeline.svg)
+![The build reads book.yaml and the Markdown pages, converts them to HTML, numbers and resolves them, applies the theme and writes the site.](https://raw.githubusercontent.com/AlkaidCheng/bookspine/main/docs/pipeline.svg)
 
 | Step | What it does |
 |---|---|
@@ -23,10 +23,10 @@ label used twice. A failed build leaves `site/` as it was.
 ## Install
 
 ```bash
-pip install guidebook
+pip install bookspine
 ```
 
-guidebook needs Python 3.11 or later and runs on Linux, macOS and Windows. pip installs a
+bookspine needs Python 3.11 or later and runs on Linux, macOS and Windows. pip installs a
 prebuilt wheel on x86-64 and ARM Linux with glibc 2.17 or later, on macOS with Apple silicon
 and on 64-bit Windows. Anywhere else it compiles the package, which needs a C compiler and,
 if Rust is not installed, downloads a copy of about 500 MB into the user cache.
@@ -51,14 +51,14 @@ my-book/
 Build it and preview the result:
 
 ```bash
-guidebook build my-book
+bookspine build my-book
 python -m http.server --directory my-book/site 8000
 ```
 
 Then open <http://127.0.0.1:8000/>.
 
 ```text
-guidebook build [PROJECT_DIR] [--site-dir DIR] [--allow-warnings]
+bookspine build [PROJECT_DIR] [--site-dir DIR] [--allow-warnings]
 ```
 
 | Argument | Meaning |
@@ -67,7 +67,7 @@ guidebook build [PROJECT_DIR] [--site-dir DIR] [--allow-warnings]
 | `--site-dir DIR` | Where to write the site, by default `site/` in the project directory. |
 | `--allow-warnings` | Do not fail the build on warnings. A reference that is never cited is a warning. |
 
-`python -m guidebook` runs the same command. Each build lists any files under `theme/`
+`python -m bookspine` runs the same command. Each build lists any files under `theme/`
 that are in force.
 
 ## Writing a book
@@ -278,11 +278,11 @@ first.
 
 A template replaced whole no longer receives changes from new releases, so extend the
 package's copy instead where a small change is enough. The package's templates stay
-reachable under `guidebook/`, and `base.html` has an empty `extra_head` block for
+reachable under `bookspine/`, and `base.html` has an empty `extra_head` block for
 additions to the page's head:
 
 ```jinja
-{% extends "guidebook/base.html" %}
+{% extends "bookspine/base.html" %}
 {% block extra_head %}
 <link rel="stylesheet" href="{{ page.root }}static/local.css">
 {% endblock %}
@@ -290,7 +290,7 @@ additions to the page's head:
 
 ## The site directory
 
-The build keeps a list of its top-level entries in `site/.guidebook-stamp.json`. A
+The build keeps a list of its top-level entries in `site/.bookspine-stamp.json`. A
 rebuild removes those entries whole and leaves any other top-level file alone. It stops
 if the directory is not empty and has no stamp, as it would for a mistyped `--site-dir`
 or a `site/` written by another program, and it refuses a filesystem root, the home
@@ -304,9 +304,9 @@ build. A scheduled rebuild would advance that date with nothing changed, so set
 last commit's time:
 
 ```bash
-SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) guidebook build
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) bookspine build
 ```
 
 ## License
 
-[MIT](https://github.com/AlkaidCheng/guidebook/blob/main/LICENSE)
+[MIT](https://github.com/AlkaidCheng/bookspine/blob/main/LICENSE)

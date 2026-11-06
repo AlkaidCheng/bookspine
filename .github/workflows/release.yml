@@ -73,7 +73,7 @@ jobs:
           docker run --rm --volume "$PWD:/io:ro" "$LINUX_IMAGE" bash -euc '
             /opt/python/cp311-cp311/bin/python -m venv /tmp/env
             /tmp/env/bin/pip install /io/dist/*.whl
-            /tmp/env/bin/guidebook build /io/tests/sample_book --site-dir /tmp/site
+            /tmp/env/bin/bookspine build /io/tests/sample_book --site-dir /tmp/site
             test -f /tmp/site/methods/split/second/index.html
           '
       - uses: actions/upload-artifact@v7
@@ -125,7 +125,7 @@ jobs:
         if: github.event_name == 'release'
         env:
           TAG: ${{ github.event.release.tag_name }}
-        run: test -f "dist/guidebook-${TAG#v}.tar.gz"
+        run: test -f "dist/bookspine-${TAG#v}.tar.gz"
 
   # Trusted Publishing needs no API token: PyPI accepts this workflow's OIDC identity,
   # which the project's publisher settings name. https://docs.pypi.org/trusted-publishers/
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/guidebook
+      url: https://pypi.org/p/bookspine
     permissions:
       id-token: write
     steps:

@@ -3,7 +3,7 @@
 
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
-const formats = require("../src/guidebook/static/export.js");
+const formats = require("../src/bookspine/static/export.js");
 
 const plain = (text) => [{ text }];
 

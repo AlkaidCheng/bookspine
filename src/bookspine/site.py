@@ -13,7 +13,7 @@ import jinja2
 from pygments.formatters import HtmlFormatter
 from pygments.util import ClassNotFound
 
-from guidebook.config import (
+from bookspine.config import (
     BUILD_DATE_FORMAT,
     STATIC_DIR_NAME,
     TEMPLATES_DIR_NAME,
@@ -21,17 +21,17 @@ from guidebook.config import (
     Project,
     load_config,
 )
-from guidebook.converter import convert_markdown
-from guidebook.equations import (
+from bookspine.converter import convert_markdown
+from bookspine.equations import (
     MATHJAX_URL,
     needs_mathjax,
     number_equations,
     resolve_equation_refs,
 )
-from guidebook.errors import BuildError
-from guidebook.glossary import collect_terms, make_glossary_pages
-from guidebook.pages import Page, load_pages
-from guidebook.passes import (
+from bookspine.errors import BuildError
+from bookspine.glossary import collect_terms, make_glossary_pages
+from bookspine.pages import Page, load_pages
+from bookspine.passes import (
     break_bare_urls,
     mark_external_links,
     number_boxes,
@@ -42,16 +42,16 @@ from guidebook.passes import (
     search_entries,
     split_code_lines,
 )
-from guidebook.safe_paths import replace_site, require_site_dir
+from bookspine.safe_paths import replace_site, require_site_dir
 
 # Names in the package and in the site.
-PACKAGE_NAME = "guidebook"
+PACKAGE_NAME = "bookspine"
 PYGMENTS_CSS_NAME = f"{STATIC_DIR_NAME}/pygments.css"
 SEARCH_INDEX_NAME = "search.json"
 NOJEKYLL_NAME = ".nojekyll"
 
 # An override reaches the package's own copy of a template under this prefix.
-PACKAGE_TEMPLATE_PREFIX = "guidebook"
+PACKAGE_TEMPLATE_PREFIX = "bookspine"
 
 # Replaces the build date when set: https://reproducible-builds.org/specs/source-date-epoch/
 SOURCE_DATE_EPOCH_VARIABLE = "SOURCE_DATE_EPOCH"
@@ -156,7 +156,7 @@ def convert_pages(
     Parameters
     ----------
     pages : list of Page
-        The pages :func:`~guidebook.pages.load_pages` returned, to which the
+        The pages :func:`~bookspine.pages.load_pages` returned, to which the
         glossary's are appended.
     book_dir : Path
         The book's sources.

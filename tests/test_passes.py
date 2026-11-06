@@ -7,11 +7,11 @@ from typing import Any
 
 import pytest
 
-from guidebook.config import SEARCH_TEXT_LIMIT
-from guidebook.converter import convert_markdown
-from guidebook.errors import BuildError
-from guidebook.pages import Page
-from guidebook.passes import (
+from bookspine.config import SEARCH_TEXT_LIMIT
+from bookspine.converter import convert_markdown
+from bookspine.errors import BuildError
+from bookspine.pages import Page
+from bookspine.passes import (
     break_bare_urls,
     mark_external_links,
     number_boxes,
