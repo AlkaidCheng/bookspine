@@ -31,6 +31,9 @@ jobs:
       - run: ruff check src tests
       - run: black --check src tests
       - run: mypy
+      - run: rustup component add clippy rustfmt
+      - run: cargo fmt --check --manifest-path rust/Cargo.toml
+      - run: cargo clippy --manifest-path rust/Cargo.toml -- -D warnings
 
   test:
     name: Test (Python ${{ matrix.python-version }} on ${{ matrix.os }})
