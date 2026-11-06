@@ -16,3 +16,4 @@
 - Load MathJax only on pages where it has something to do (#10).
 - Convert pages with pyromark, which follows CommonMark and halves build times, and require Python 3.11 (#12).
 - Add abbreviations, keys, paragraph attributes, `\(…\)` math and code block options to `convert_markdown`, and keep the footnotes the theme styles (#13).
+- Style code blocks with `linenums` in the theme's colours, and stop `pygments_dark` colouring their numbers in the light scheme (#14).

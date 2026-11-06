@@ -293,7 +293,13 @@ def pygments_css(config: BookConfig) -> str:
     except ClassNotFound as error:
         raise BuildError(f"book.yaml: {error}") from None
     light_css = light.get_style_defs(".highlight")
-    dark_css = dark.get_style_defs('[data-theme="dark"] .highlight')
+    # Pygments writes its line number rules without the selector, so the dark scheme's
+    # would reach the light scheme too. book.css colours the numbers in both.
+    dark_selector = '[data-theme="dark"] .highlight'
+    dark_css = "\n".join(
+        dark.get_background_style_defs(dark_selector)
+        + dark.get_token_style_defs(dark_selector)
+    )
     return f"{light_css}\n{dark_css}\n"
 
 
