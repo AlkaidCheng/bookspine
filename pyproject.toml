@@ -8,8 +8,8 @@ dynamic = ["version"]
 description = "Build a textbook-style static site from Markdown chapters."
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT"
-license-files = ["LICENSE"]
+license = "MIT AND BSD-3-Clause"
+license-files = ["LICENSE", "LICENSES/*"]
 authors = [{ name = "Alkaid Cheng", email = "alkaidc@stanford.edu" }]
 keywords = ["documentation", "markdown", "static-site", "textbook", "mathjax"]
 classifiers = [

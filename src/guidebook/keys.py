@@ -2,7 +2,8 @@
 
 Copied from pymdown-extensions 12.3, pymdownx/keymap_db.py:
 https://github.com/facelessuser/pymdown-extensions/blob/12.3/pymdownx/keymap_db.py
-Copyright (c) 2014 - 2025 Isaac Muse, under the MIT License.
+Copyright (c) 2014 - 2025 Isaac Muse, under the MIT License, whose text is in
+``LICENSES/pymdown-extensions.txt``.
 """
 
 # The label of each key, by its name.

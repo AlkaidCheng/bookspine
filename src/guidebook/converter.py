@@ -79,7 +79,8 @@ _PROTECTED_PATTERN = re.compile(
 _FOOTNOTE_REFERENCE = r"\[\^(?P<footnote>[^\]\s]+)\]"
 _KEYS = r"\+\+(?P<keys>[\w-]+(?:\+[\w-]+)*?)\+\+"
 
-# Python-Markdown's rule for turning a heading into an anchor, which books link to.
+# Python-Markdown's rule for turning a heading into an anchor, which books link to,
+# under the BSD license in LICENSES/Python-Markdown.txt.
 # https://github.com/Python-Markdown/markdown/blob/3.11.3/markdown/extensions/toc.py#L33
 _NON_WORD_PATTERN = re.compile(r"[^\w\s-]")
 _SEPARATOR_PATTERN = re.compile(r"[-\s]+")
