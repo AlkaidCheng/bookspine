@@ -1,0 +1,145 @@
+name: Release
+
+# Publishing a GitHub Release uploads the package to PyPI. Running this workflow by hand,
+# or changing it in a pull request, builds and checks the package and stops there.
+on:
+  release:
+    types: [published]
+  pull_request:
+    paths: [.github/workflows/release.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  sdist:
+    name: Build the source distribution
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/
+
+  # The compiled module uses the stable ABI, so one wheel per platform serves every Python
+  # from 3.11. Any other platform builds from the source distribution.
+  wheels:
+    name: Build the wheel on ${{ matrix.runner }}
+    needs: ci
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            linux-image: quay.io/pypa/manylinux2014_x86_64
+          - runner: macos-latest
+          - runner: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      # manylinux2014 means glibc 2.17, also the floor of Rust's own Linux targets.
+      # https://peps.python.org/pep-0599/
+      # https://doc.rust-lang.org/rustc/platform-support.html
+      - uses: PyO3/maturin-action@v1
+        with:
+          manylinux: "2014"
+          rust-toolchain: stable
+          args: --release --out dist
+      - name: Build the sample book on the oldest Linux the wheel claims
+        if: matrix.linux-image
+        env:
+          LINUX_IMAGE: ${{ matrix.linux-image }}
+        run: |
+          docker run --rm --volume "$PWD:/io:ro" "$LINUX_IMAGE" bash -euc '
+            /opt/python/cp311-cp311/bin/python -m venv /tmp/env
+            /tmp/env/bin/pip install /io/dist/*.whl
+            /tmp/env/bin/guidebook build /io/tests/sample_book --site-dir /tmp/site
+            test -f /tmp/site/methods/split/second/index.html
+          '
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-${{ matrix.runner }}
+          path: dist/
+
+  # The oldest Python the wheels claim and the newest, against the wheel rather than the
+  # checkout, which pytest does not put on the path.
+  wheel-tests:
+    name: Test the ${{ matrix.runner }} wheel on Python ${{ matrix.python-version }}
+    needs: wheels
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.x"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheel-${{ matrix.runner }}
+          path: dist/
+      - run: pip install pytest dist/*.whl
+      - run: pytest
+
+  check:
+    name: Check the package
+    needs: [sdist, wheel-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist/
+          merge-multiple: true
+      - run: pip install twine
+      - run: twine check --strict dist/*
+      - name: Check that the release's tag names the package's version
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: test -f "dist/guidebook-${TAG#v}.tar.gz"
+
+  # Trusted Publishing needs no API token: PyPI accepts this workflow's OIDC identity,
+  # which the project's publisher settings name. https://docs.pypi.org/trusted-publishers/
+  publish:
+    name: Publish to PyPI
+    needs: check
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/guidebook
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist/
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
