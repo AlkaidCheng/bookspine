@@ -27,9 +27,9 @@ pip install guidebook
 ```
 
 guidebook needs Python 3.11 or later and runs on Linux, macOS and Windows. pip installs a
-prebuilt wheel on x86-64 Linux with glibc 2.17 or later, on macOS with Apple silicon and on
-64-bit Windows. Anywhere else it compiles the package, which needs a C compiler and, if Rust
-is not installed, downloads a copy of about 500 MB into the user cache.
+prebuilt wheel on x86-64 and ARM Linux with glibc 2.17 or later, on macOS with Apple silicon
+and on 64-bit Windows. Anywhere else it compiles the package, which needs a C compiler and,
+if Rust is not installed, downloads a copy of about 500 MB into the user cache.
 
 ## Usage
 
