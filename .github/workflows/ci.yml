@@ -8,12 +8,15 @@ on:
     # Monthly, so that a dependency's new release that breaks the build shows early.
     - cron: "17 6 1 * *"
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
+# Named by workflow, so a pull request that runs this file twice, directly and through
+# release.yml, does not cancel itself.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
