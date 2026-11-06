@@ -1,0 +1,18 @@
+[package]
+name = "guidebook"
+edition = "2024"
+publish = false
+
+[lib]
+name = "_markdown"
+crate-type = ["cdylib"]
+
+[dependencies]
+pulldown-cmark = { version = ">=0.13", default-features = false, features = ["html", "simd"] }
+# abi3 builds one wheel per platform that every Python from 3.11 can load.
+pyo3 = { version = ">=0.30", features = ["abi3-py311"] }
+
+[profile.release]
+strip = true
+lto = "fat"
+codegen-units = 1

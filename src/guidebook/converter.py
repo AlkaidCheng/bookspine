@@ -1,8 +1,8 @@
-"""From Markdown to HTML: pyromark, with the book's additions around it.
+"""From Markdown to HTML: pulldown-cmark, with the book's additions around it.
 
-pyromark follows CommonMark. One walk over a page's lines takes out what it cannot read,
-such as boxes and footnotes, and the rest is added to what it returns, in the HTML that
-:mod:`guidebook.passes` expects.
+pulldown-cmark follows CommonMark. One walk over a page's lines takes out what it cannot
+read, such as boxes and footnotes, and the rest is added to what it returns, in the HTML
+that :mod:`guidebook.passes` expects.
 """
 
 import html
@@ -10,13 +10,13 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 
-import pyromark
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexer import Lexer
 from pygments.lexers import TextLexer, get_lexer_by_name
 from pygments.util import ClassNotFound
 
+from guidebook import _markdown
 from guidebook.config import MARKDOWN_OPTIONS
 from guidebook.keys import KEY_ALIASES, KEY_LABELS
 
@@ -26,7 +26,7 @@ BLOCK_INDENT = 4
 # The tooltip of a link from a footnote back to the text.
 FOOTNOTE_BACKLINK_TITLE = "Back to text"
 
-# What the walk takes out stands in the page as a marker while pyromark runs.
+# What the walk takes out stands in the page as a marker while pulldown-cmark runs.
 # Private-use characters cannot come from a book by accident.
 _BLOCK_MARKER = "\ue000{}\ue001"
 _INLINE_MARKER = "\ue006{}\ue007"
@@ -50,7 +50,7 @@ _ATTRIBUTE_PATTERN = re.compile(
 _MATH_START_PATTERN = re.compile(r"^(?P<indent> *)(?:\\begin\{(?P<name>[\w*]+)\}|\\\[)")
 _INLINE_MATH_PATTERN = re.compile(r"(?P<code>(`+).+?\2)|\\\((?P<math>.+?)\\\)")
 
-# What pyromark returns.
+# What pulldown-cmark returns.
 _PARAGRAPH_WRAPPER_PATTERN = re.compile(r"^<p>|</p>$")
 _DISPLAY_SPAN_PATTERN = re.compile(
     r'(?:<p>)?<span class="math math-display">(.*?)</span>(?:</p>)?', re.S
@@ -125,7 +125,7 @@ def convert_markdown(text: str) -> str:
 
 
 def _parse(text: str) -> str:
-    html_text = pyromark.html(text, options=MARKDOWN_OPTIONS)
+    html_text = _markdown.to_html(text, MARKDOWN_OPTIONS)
     return _set_inline_code(_set_math(html_text))
 
 
@@ -134,7 +134,7 @@ def _convert_blocks(text: str, extras: _Extras) -> str:
 
 
 def _lift(text: str, extras: _Extras) -> str:
-    """Take what pyromark cannot read out of `text`, and return what is left."""
+    """Take what pulldown-cmark cannot read out of `text`, and return what is left."""
     lines = text.split("\n")
     kept: list[str] = []
     fence = ""

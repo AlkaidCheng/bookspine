@@ -3,6 +3,13 @@
 /site/
 /tests/sample_book/site/
 
+# ---- Rust ----------------------------------------------------------------
+# Dependencies float, so the crates have no lock file.
+/rust/target/
+/rust/Cargo.lock
+/src/guidebook/_markdown*.so
+/src/guidebook/_markdown*.pyd
+
 # ---- Python --------------------------------------------------------------
 __pycache__/
 *.py[cod]

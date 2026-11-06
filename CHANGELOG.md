@@ -22,3 +22,4 @@
 - Show a heading's `&` as written in the sidebar, where `number_headings` passed on its HTML entity (#15).
 - Expand tabs in `convert_markdown`, so the text of a box or footnote can be indented with them (#15).
 - Carry the licences of the code copied from pymdown-extensions and Python-Markdown in `LICENSES/` (#15).
+- Convert pages with pulldown-cmark directly, through the compiled `guidebook._markdown` module, in place of pyromark (#16).
