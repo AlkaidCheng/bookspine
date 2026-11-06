@@ -6,7 +6,7 @@ environments, citations, client-side search, and light and dark colour schemes. 
 theme comes with the package, so a book holds only its content and one configuration
 file.
 
-![The build reads book.yaml and the Markdown pages, converts them to HTML, numbers and resolves them, applies the theme and writes the site.](docs/pipeline.svg)
+![The build reads book.yaml and the Markdown pages, converts them to HTML, numbers and resolves them, applies the theme and writes the site.](https://raw.githubusercontent.com/AlkaidCheng/guidebook/main/docs/pipeline.svg)
 
 | Step | What it does |
 |---|---|
@@ -26,7 +26,10 @@ label used twice. A failed build leaves `site/` as it was.
 pip install guidebook
 ```
 
-guidebook needs Python 3.11 or later and runs on Linux, macOS and Windows.
+guidebook needs Python 3.11 or later and runs on Linux, macOS and Windows. pip installs a
+prebuilt wheel on x86-64 Linux with glibc 2.17 or later, on macOS with Apple silicon and on
+64-bit Windows. Anywhere else it compiles the package, which needs a C compiler and, if Rust
+is not installed, downloads a copy of about 500 MB into the user cache.
 
 ## Usage
 
@@ -306,4 +309,4 @@ SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) guidebook build
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/AlkaidCheng/guidebook/blob/main/LICENSE)
