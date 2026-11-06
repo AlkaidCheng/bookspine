@@ -39,7 +39,9 @@ _EXTERNAL_LINK_PATTERN = re.compile(
     r'<a href="(https?://[^"]+)" class="external" rel="noopener">([^<\s]+)</a>'
 )
 _CODE_BLOCK_PATTERN = re.compile(
-    r'(<div class="highlight"><pre><span></span><code>)(.*?)(</code></pre>)', re.S
+    r'(<div class="highlight">(?:<span class="filename">[^<]*</span>)?'
+    r"<pre><span></span><code>)(.*?)(</code></pre>)",
+    re.S,
 )
 _CODE_LINE_PATTERN = re.compile(r".*\n|.+")
 _URL_SCHEME_PATTERN = re.compile(r"https?://")
@@ -348,7 +350,8 @@ def split_code_lines(page: Page) -> None:
 
     The span records the line's indentation, which a continuation goes past, so a
     wrapped line reads apart from the next one. Each newline stays in its span, which
-    leaves the block's text and a selection of it as they were.
+    leaves the block's text and a selection of it as they were. A block with line
+    numbers is left alone: a wrapped line would lose its place beside its number.
     """
 
     def line_span(line: str) -> str:
@@ -358,7 +361,9 @@ def split_code_lines(page: Page) -> None:
         return f'<span class="line"{style}>{line}</span>'
 
     def replace(match: re.Match[str]) -> str:
-        lines = "".join(map(line_span, _CODE_LINE_PATTERN.findall(match.group(2))))
+        # Pygments closes the span of a marked line after its newline.
+        code = match.group(2).replace("\n</span>", "</span>\n")
+        lines = "".join(map(line_span, _CODE_LINE_PATTERN.findall(code)))
         return f"{match.group(1)}{lines}{match.group(3)}"
 
     page.body_html = _CODE_BLOCK_PATTERN.sub(replace, page.body_html)

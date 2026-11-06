@@ -15,3 +15,4 @@
 - Keep the arrow of an `.external` link on the line that holds the end of the link (#9).
 - Load MathJax only on pages where it has something to do (#10).
 - Convert pages with pyromark, which follows CommonMark and halves build times, and require Python 3.11 (#12).
+- Add abbreviations, keys, paragraph attributes, `\(…\)` math and code block options to `convert_markdown`, and keep the footnotes the theme styles (#13).

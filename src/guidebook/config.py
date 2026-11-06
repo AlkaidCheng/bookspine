@@ -34,7 +34,6 @@ DEFAULT_PYGMENTS_DARK = "github-dark"
 # https://monosans.github.io/pyromark/
 MARKDOWN_OPTIONS = (
     pyromark.Options.ENABLE_DEFINITION_LIST
-    | pyromark.Options.ENABLE_FOOTNOTES
     | pyromark.Options.ENABLE_HEADING_ATTRIBUTES
     | pyromark.Options.ENABLE_MATH
     | pyromark.Options.ENABLE_SMART_PUNCTUATION

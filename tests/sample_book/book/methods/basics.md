@@ -54,3 +54,35 @@ Table: Marks of every kind.
 def add(a, b):
     return a + b
 ```
+
+A title, marked lines and line numbers:
+
+```python title="add.py" hl_lines="2"
+def add(a, b):
+    return a + b
+```
+
+```python linenums="10"
+def add(a, b):
+    return a + b
+```
+
+## Marks
+
+A footnote[^short], the same one again[^short], and a longer one[^long]. Press
+++ctrl+alt+delete++ to restart the HTML page, or run `#!python add(1, 2)` with
+\(a = 1\).
+
+A paragraph with an id.
+{: #marked-paragraph .marked }
+
+\[
+y = 2
+\]
+
+[^short]: A short note.
+[^long]: A longer note.
+
+    With a second paragraph.
+
+*[HTML]: HyperText Markup Language

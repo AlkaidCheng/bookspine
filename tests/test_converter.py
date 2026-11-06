@@ -1,8 +1,59 @@
 """Tests for turning Markdown into the HTML the later passes read."""
 
+import random
+import re
+
 import pytest
 
 from guidebook.converter import convert_markdown
+
+# What Python-Markdown and pymdown-extensions gave for each source, which the adapters
+# keep. Only whitespace between tags may differ.
+REFERENCE_OUTPUT = {
+    "\\begin{align}\na &= b \\\\\nc &< d\n\\end{align}\n": '<div class="arithmatex">\\[\\begin{align}\na &amp;= b \\\\\nc &amp;&lt; d\n\\end{align}\\]</div>',
+    "Text\n\n\\begin{equation}\nx\n\\end{equation}\n\nMore\n": '<p>Text</p>\n<div class="arithmatex">\\[\\begin{equation}\nx\n\\end{equation}\\]</div>\n<p>More</p>',
+    "\\[\nx < y\n\\]\n": '<div class="arithmatex">\\[\nx &lt; y\n\\]</div>',
+    "\\[ x \\]\n": '<div class="arithmatex">\\[ x \\]</div>',
+    "Inline \\(a < b\\) and \\(c\\).\n": '<p>Inline <span class="arithmatex">\\(a &lt; b\\)</span> and <span class="arithmatex">\\(c\\)</span>.</p>',
+    "`\\(not\\)` and \\(yes\\)\n": '<p><code>\\(not\\)</code> and <span class="arithmatex">\\(yes\\)</span></p>',
+    'HTML and `HTML` and XHTML.\n\n*[HTML]: Hyper "Text" Markup\n': '<p><abbr title="Hyper &quot;Text&quot; Markup">HTML</abbr> and <code>HTML</code> and XHTML.</p>',
+    "The W3C said.\n\n*[W3C]: World\n*[HTML]: x\n": '<p>The <abbr title="World">W3C</abbr> said.</p>',
+    "$HTML$ HTML [HTML](a.md)\n\n*[HTML]: H\n": '<p><span class="arithmatex">\\(HTML\\)</span> <abbr title="H">HTML</abbr> <a href="a.md"><abbr title="H">HTML</abbr></a></p>',
+    "## HTML\n\n*[HTML]: H\n": '<h2 id="html"><abbr title="H">HTML</abbr></h2>',
+    "Text\n{: .x #y }\n": '<p class="x" id="y">Text</p>',
+    'Text\n{: .a .b data-k="v" }\n': '<p class="a b" data-k="v">Text</p>',
+    "One\nTwo\n{: #z }\n": '<p id="z">One\nTwo</p>',
+    "Run `#!python x = 1` now\n": '<p>Run <code class="highlight"><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span></code> now</p>',
+    "`#!not-a-lang x`\n": '<p><code class="highlight">x</code></p>',
+    "`#!python` alone\n": "<p><code>#!python</code> alone</p>",
+    "`:::python x = 1`\n": '<p><code class="highlight"><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span></code></p>',
+    '```python title="a.py"\nx = 1\n```\n': '<div class="highlight"><span class="filename">a.py</span><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>\n</code></pre></div>',
+    '```python hl_lines="2"\nx = 1\ny = 2\nz = 3\n```\n': '<div class="highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>\n<span class="hll"><span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>\n</span><span class="n">z</span> <span class="o">=</span> <span class="mi">3</span>\n</code></pre></div>',
+    '```python hl_lines="1 3-4"\na\nb\nc\nd\n```\n': '<div class="highlight"><pre><span></span><code><span class="hll"><span class="n">a</span>\n</span><span class="n">b</span>\n<span class="hll"><span class="n">c</span>\n</span><span class="hll"><span class="n">d</span>\n</span></code></pre></div>',
+    '```python linenums="1"\nx = 1\ny = 2\n```\n': '<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>\n<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>\n<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>\n</code></pre></div></td></tr></table></div>',
+    '```python linenums="5" hl_lines="1" title="t"\nx = 1\ny = 2\n```\n': '<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">t</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">5</span>\n<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="hll"><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>\n</span><span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>\n</code></pre></div></td></tr></table></div>',
+    '```title="plain"\nx\n```\n': '<div class="highlight"><span class="filename">plain</span><pre><span></span><code>x\n</code></pre></div>',
+    "A[^1] and B[^n].\n\n[^1]: One\n[^n]: Two\n    more\n\n    para\n": '<p>A<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup> and B<sup id="fnref:n"><a class="footnote-ref" href="#fn:n">2</a></sup>.</p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:1">\n<p>One&#160;<a class="footnote-backref" href="#fnref:1" title="Back to text">&#8617;</a></p>\n</li>\n<li id="fn:n">\n<p>Two\nmore</p>\n<p>para&#160;<a class="footnote-backref" href="#fnref:n" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "B[^b] then A[^a].\n\n[^a]: Aye\n[^b]: Bee\n": '<p>B<sup id="fnref:b"><a class="footnote-ref" href="#fn:b">2</a></sup> then A<sup id="fnref:a"><a class="footnote-ref" href="#fn:a">1</a></sup>.</p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:a">\n<p>Aye&#160;<a class="footnote-backref" href="#fnref:a" title="Back to text">&#8617;</a></p>\n</li>\n<li id="fn:b">\n<p>Bee&#160;<a class="footnote-backref" href="#fnref:b" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "Twice[^1] again[^1].\n\n[^1]: One\n": '<p>Twice<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup> again<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:1">\n<p>One&#160;<a class="footnote-backref" href="#fnref:1" title="Back to text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "Missing[^x].\n": "<p>Missing[^x].</p>",
+    "Unused.\n\n[^u]: Note\n": '<p>Unused.</p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:u">\n<p>Note&#160;<a class="footnote-backref" href="#fnref:u" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "`[^1]` A[^1]\n\n[^1]: One\n": '<p><code>[^1]</code> A<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:1">\n<p>One&#160;<a class="footnote-backref" href="#fnref:1" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "!!! note\n    In box[^1]\n\n[^1]: One\n": '<div class="admonition note">\n<p class="admonition-title">Note</p>\n<p>In box<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>\n</div>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:1">\n<p>One&#160;<a class="footnote-backref" href="#fnref:1" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "Press ++ctrl+alt+delete++ now\n": '<p>Press <span class="keys"><kbd class="key-control">Ctrl</kbd><span>+</span><kbd class="key-alt">Alt</kbd><span>+</span><kbd class="key-delete">Del</kbd></span> now</p>',
+    "++enter++ ++a++ ++f12++ ++page-up++ ++arrow-left++ ++cmd+s++ ++1++ ++tab++\n": '<p><span class="keys"><kbd class="key-enter">Enter</kbd></span> <span class="keys"><kbd class="key-a">A</kbd></span> <span class="keys"><kbd class="key-f12">F12</kbd></span> <span class="keys"><kbd class="key-page-up">Page Up</kbd></span> <span class="keys"><kbd class="key-arrow-left">Left</kbd></span> <span class="keys"><kbd class="key-command">Cmd</kbd><span>+</span><kbd class="key-s">S</kbd></span> <span class="keys"><kbd class="key-1">1</kbd></span> <span class="keys"><kbd class="key-tab">Tab</kbd></span></p>',
+    "++foo++ and ++ctrl+foo++\n": "<p>++foo++ and ++ctrl+foo++</p>",
+    "`++a++`\n": "<p><code>++a++</code></p>",
+}
+
+
+def spaced(html: str) -> str:
+    return re.sub(r"\s+", " ", html).strip()
+
+
+@pytest.mark.parametrize("source", sorted(REFERENCE_OUTPUT))
+def test_the_adapters_keep_the_old_output(source: str) -> None:
+    assert spaced(convert_markdown(source)) == spaced(REFERENCE_OUTPUT[source])
 
 
 def test_a_box_holds_its_title_and_text() -> None:
@@ -161,3 +212,138 @@ def test_lists_follow_commonmark() -> None:
 
 def test_html_passes_through() -> None:
     assert '<div class="x">a</div>' in convert_markdown('<div class="x">a</div>\n')
+
+
+def test_math_inside_display_math_stays_in_one_block() -> None:
+    html = convert_markdown("$$\n\\begin{aligned}\na &= b\n\\end{aligned}\n$$\n")
+    assert html.count('class="arithmatex"') == 1
+    assert html.startswith('<div class="arithmatex">\\[\n\\begin{aligned}')
+
+
+def test_an_unclosed_environment_stays_as_text() -> None:
+    assert "arithmatex" not in convert_markdown("\\begin{align}\nx\n")
+
+
+def test_an_environment_inside_a_paragraph_stays_as_text() -> None:
+    assert "arithmatex" not in convert_markdown("Text\n\\begin{a}\nx\n\\end{a}\n")
+
+
+def test_a_paragraph_of_inline_math_keeps_its_paragraph() -> None:
+    assert convert_markdown("\\(x\\)\n").startswith('<p><span class="arithmatex">')
+
+
+def test_the_longest_abbreviation_wins() -> None:
+    html = convert_markdown("A B\n\n*[A]: One\n*[A B]: Two\n")
+    assert html == '<p><abbr title="Two">A B</abbr></p>'
+
+
+def test_abbreviations_stay_out_of_math_and_tags() -> None:
+    html = convert_markdown("$A$ [x](A.md) A\n\n*[A]: Letter\n")
+    assert html.count("<abbr") == 1
+    assert 'href="A.md"' in html
+
+
+def test_attributes_reach_a_list_item() -> None:
+    assert '<li class="x">a</li>' in convert_markdown("- a\n{: .x }\n")
+
+
+def test_attribute_values_keep_their_quotes() -> None:
+    assert 'title="a b"' in convert_markdown('Text\n{: title="a b" }\n')
+
+
+def test_a_quote_before_attributes_still_closes() -> None:
+    assert convert_markdown('"Text"\n{: .x }\n') == (
+        '<p class="x">\u201cText\u201d</p>'
+    )
+
+
+def test_attributes_with_nothing_to_hold_them_are_dropped() -> None:
+    assert "\ue002" not in convert_markdown("| a |\n|---|\n| b |\n{: .x }\n")
+
+
+@pytest.mark.parametrize("before", ["", "## Title\n"])
+def test_an_attribute_line_with_no_text_before_it_stays_as_text(before: str) -> None:
+    assert convert_markdown(f"{before}{{: .x }}\n").endswith("<p>{: .x }</p>")
+
+
+def test_inline_code_colours_leave_code_blocks_alone() -> None:
+    html = convert_markdown("```\n#!python x\n```\n")
+    assert 'code class="highlight"' not in html
+    assert "#!python x" in html
+
+
+def test_code_options_reach_blocks_in_boxes_and_lists() -> None:
+    box = '!!! note\n    ```python title="a.py"\n    x = 1\n    ```\n'
+    assert '<span class="filename">a.py</span>' in convert_markdown(box)
+    item = '- a\n\n    ```python hl_lines="1"\n    x = 1\n    ```\n'
+    assert '<span class="hll">' in convert_markdown(item)
+
+
+@pytest.mark.parametrize("options", ["", ' linenums="1"'])
+def test_a_code_title_is_escaped(options: str) -> None:
+    assert "a&lt;b" in convert_markdown(f'```text title="a<b"{options}\nx\n```\n')
+
+
+def test_a_block_with_options_needs_no_language() -> None:
+    html = convert_markdown('``` title="a.py"\nx = 1\n```\n')
+    assert '<span class="filename">a.py</span>' in html
+    assert "x = 1" in html
+
+
+@pytest.mark.parametrize("line", ["```", "````python"])
+def test_a_fence_closes_only_on_a_bare_line_as_long_as_itself(line: str) -> None:
+    html = convert_markdown(f"````\n{line}\n[^1]: x\n````\n")
+    assert "[^1]: x" in html
+    assert "footnote" not in html
+
+
+def test_a_footnote_ending_in_a_list_gets_its_own_backlink() -> None:
+    html = convert_markdown("A[^1]\n\n[^1]: Note\n\n    - item\n")
+    assert '</ul>\n<p>&#160;<a class="footnote-backref"' in html
+
+
+def test_the_lines_after_a_footnote_may_start_a_list() -> None:
+    assert "<ul>" in convert_markdown("A[^1]\n\n[^1]: Note\n    - item\n")
+
+
+def test_footnotes_can_use_abbreviations_and_cite_each_other() -> None:
+    html = convert_markdown("A[^1]\n\n[^1]: The W3C[^2]\n[^2]: Two\n\n*[W3C]: World\n")
+    assert '<abbr title="World">W3C</abbr><sup id="fnref:2">' in html
+
+
+def test_definitions_inside_code_stay_as_code() -> None:
+    html = convert_markdown("```\n[^1]: x\n*[A]: y\n```\n")
+    assert "[^1]: x" in html
+    assert "*[A]: y" in html
+    assert "footnote" not in html
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_no_marker_survives_any_text(seed: int) -> None:
+    pieces = [
+        "a ",
+        "\n",
+        "\n\n",
+        "    ",
+        "!!! note\n",
+        "```\n",
+        "$$\n",
+        "$x$ ",
+        r"\(y\) ",
+        r"\[",
+        r"\]",
+    ]
+    pieces += [
+        "{: .x }\n",
+        "[^a]",
+        "[^a]: b\n",
+        "*[a]: c\n",
+        "- ",
+        "++a++ ",
+        r"\begin{b}",
+        r"\end{b}",
+    ]
+    rng = random.Random(seed)
+    for _ in range(50):
+        html = convert_markdown("".join(rng.choices(pieces, k=30)))
+        assert not re.search("[\ue000-\ue007]", html)
