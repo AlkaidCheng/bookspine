@@ -6,11 +6,11 @@ from typing import Any
 
 import pytest
 
-from guidebook import BuildError, build_book
-from guidebook.equations import number_equations
-from guidebook.glossary import collect_terms, make_glossary_pages
-from guidebook.pages import GlossaryEntry, Page
-from guidebook.passes import number_boxes, number_headings
+from bookspine import BuildError, build_book
+from bookspine.equations import number_equations
+from bookspine.glossary import collect_terms, make_glossary_pages
+from bookspine.pages import GlossaryEntry, Page
+from bookspine.passes import number_boxes, number_headings
 
 
 def make_page(body_html: str = "", **fields: Any) -> Page:

@@ -1,6 +1,6 @@
 """Replace a site directory's contents without touching anything else.
 
-A site directory carries a stamp, ``.guidebook-stamp.json``, naming the top-level
+A site directory carries a stamp, ``.bookspine-stamp.json``, naming the top-level
 entries the last build wrote there. A rebuild removes those entries whole and leaves
 every other top-level entry alone. A folder that is not empty and has no stamp stops
 the build, which is what keeps a mistyped ``--site-dir`` from costing anything.
@@ -20,12 +20,12 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from guidebook import __version__
-from guidebook.errors import BuildError
+from bookspine import __version__
+from bookspine.errors import BuildError
 
-STAMP_NAME = ".guidebook-stamp.json"
+STAMP_NAME = ".bookspine-stamp.json"
 
-_PRODUCER = "guidebook"
+_PRODUCER = "bookspine"
 _TEMPORARY_STAMP_NAME = f"{STAMP_NAME}.tmp"
 
 # One path component on every system, an allow-list because a name is rejected, never

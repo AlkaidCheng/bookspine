@@ -1,4 +1,4 @@
-"""Tests for the ``guidebook`` command."""
+"""Tests for the ``bookspine`` command."""
 
 import subprocess
 import sys
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from guidebook import __version__
-from guidebook.cli import main
+from bookspine import __version__
+from bookspine.cli import main
 
 
 def add_uncited_reference(project_dir: Path) -> None:
@@ -86,7 +86,7 @@ def test_version_prints_the_package_version(
     with pytest.raises(SystemExit) as exit_info:
         main(["--version"])
     assert exit_info.value.code == 0
-    assert capsys.readouterr().out.strip() == f"guidebook {__version__}"
+    assert capsys.readouterr().out.strip() == f"bookspine {__version__}"
 
 
 def test_a_command_is_required(capsys: pytest.CaptureFixture[str]) -> None:
@@ -98,7 +98,7 @@ def test_a_command_is_required(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_the_module_runs_the_same_command(project_dir: Path) -> None:
     completed = subprocess.run(
-        [sys.executable, "-m", "guidebook", "build", str(project_dir)],
+        [sys.executable, "-m", "bookspine", "build", str(project_dir)],
         capture_output=True,
         text=True,
     )

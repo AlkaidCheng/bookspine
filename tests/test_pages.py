@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from guidebook.config import BookConfig, ChapterConfig, PartConfig, load_config
-from guidebook.errors import BuildError
-from guidebook.pages import (
+from bookspine.config import BookConfig, ChapterConfig, PartConfig, load_config
+from bookspine.errors import BuildError
+from bookspine.pages import (
     Page,
     load_pages,
     read_page,

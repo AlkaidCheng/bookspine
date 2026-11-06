@@ -7,8 +7,8 @@ from typing import Any
 
 import yaml
 
-from guidebook.config import CONFIG_NAME, OPENER_NAME, BookConfig, parse_yaml
-from guidebook.errors import BuildError
+from bookspine.config import CONFIG_NAME, OPENER_NAME, BookConfig, parse_yaml
+from bookspine.errors import BuildError
 
 _FRONT_MATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
 

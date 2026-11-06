@@ -2,7 +2,7 @@
 
 pulldown-cmark follows CommonMark. One walk over a page's lines takes out what it cannot
 read, such as boxes and footnotes, and the rest is added to what it returns, in the HTML
-that :mod:`guidebook.passes` expects.
+that :mod:`bookspine.passes` expects.
 """
 
 import html
@@ -16,9 +16,9 @@ from pygments.lexer import Lexer
 from pygments.lexers import TextLexer, get_lexer_by_name
 from pygments.util import ClassNotFound
 
-from guidebook import _markdown
-from guidebook.config import MARKDOWN_OPTIONS
-from guidebook.keys import KEY_ALIASES, KEY_LABELS
+from bookspine import _markdown
+from bookspine.config import MARKDOWN_OPTIONS
+from bookspine.keys import KEY_ALIASES, KEY_LABELS
 
 # Spaces that the text of a box or a footnote is indented by.
 BLOCK_INDENT = 4

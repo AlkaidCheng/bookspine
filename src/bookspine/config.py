@@ -13,9 +13,9 @@ from typing import Any
 
 import yaml
 
-from guidebook import _markdown
-from guidebook.errors import BuildError
-from guidebook.safe_paths import require_path_component
+from bookspine import _markdown
+from bookspine.errors import BuildError
+from bookspine.safe_paths import require_path_component
 
 # Names inside a project directory.
 CONFIG_NAME = "book.yaml"

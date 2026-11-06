@@ -2,9 +2,9 @@
 
 from importlib.metadata import version
 
-__version__ = version("guidebook")
+__version__ = version("bookspine")
 
-from guidebook.errors import BuildError
-from guidebook.site import BuildResult, build_book
+from bookspine.errors import BuildError
+from bookspine.site import BuildResult, build_book
 
 __all__ = ["BuildError", "BuildResult", "__version__", "build_book"]

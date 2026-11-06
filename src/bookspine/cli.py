@@ -1,19 +1,19 @@
-"""The ``guidebook`` command."""
+"""The ``bookspine`` command."""
 
 import argparse
 import io
 import sys
 
-from guidebook import __version__
-from guidebook.errors import BuildError
-from guidebook.site import build_book
+from bookspine import __version__
+from bookspine.errors import BuildError
+from bookspine.site import build_book
 
 _DESCRIPTION = "Build a textbook-style static site from Markdown chapters."
 
 
 def make_parser() -> argparse.ArgumentParser:
-    """Return the argument parser of the ``guidebook`` command."""
-    parser = argparse.ArgumentParser(prog="guidebook", description=_DESCRIPTION)
+    """Return the argument parser of the ``bookspine`` command."""
+    parser = argparse.ArgumentParser(prog="bookspine", description=_DESCRIPTION)
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )

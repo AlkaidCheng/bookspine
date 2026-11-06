@@ -79,6 +79,6 @@ jobs:
       - name: Build the sample book from outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          guidebook build "$GITHUB_WORKSPACE/tests/sample_book" --site-dir sample-site
+          bookspine build "$GITHUB_WORKSPACE/tests/sample_book" --site-dir sample-site
           test -f sample-site/methods/split/second/index.html
           test -f sample-site/static/book.css

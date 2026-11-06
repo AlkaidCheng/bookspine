@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 import yaml
 
-from guidebook.config import (
+from bookspine.config import (
     DEFAULT_PYGMENTS_DARK,
     DEFAULT_PYGMENTS_LIGHT,
     ChapterConfig,
@@ -14,7 +14,7 @@ from guidebook.config import (
     load_config,
     parse_yaml,
 )
-from guidebook.errors import BuildError
+from bookspine.errors import BuildError
 
 
 def config_path_with(tmp_path: Path, **keys: Any) -> Path:

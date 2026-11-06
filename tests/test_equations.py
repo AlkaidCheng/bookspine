@@ -5,14 +5,14 @@ from typing import Any
 
 import pytest
 
-from guidebook.equations import (
+from bookspine.equations import (
     equation_rows,
     needs_mathjax,
     number_equations,
     resolve_equation_refs,
 )
-from guidebook.errors import BuildError
-from guidebook.pages import Page
+from bookspine.errors import BuildError
+from bookspine.pages import Page
 
 # Display equations and the numbers MathJax 3.2.2 gives them under ``tags: "all"``:
 # "#" stands for the next number in the count, anything else for a manual ``\tag``.

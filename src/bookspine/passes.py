@@ -6,15 +6,15 @@ from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from guidebook.config import (
+from bookspine.config import (
     LABELLED_BOXES,
     NUMBERED_BOXES,
     SEARCH_TEXT_LIMIT,
     UNNUMBERED_HEADINGS,
 )
-from guidebook.converter import convert_markdown
-from guidebook.errors import BuildError
-from guidebook.pages import Page
+from bookspine.converter import convert_markdown
+from bookspine.errors import BuildError
+from bookspine.pages import Page
 
 CODE_SEGMENT_PATTERN = re.compile(r"(<pre.*?</pre>|<code.*?</code>)", re.S)
 _HEADING_PATTERN = re.compile(r'<h([23]) id="([^"]+)">(.*?)</h\1>', re.S)

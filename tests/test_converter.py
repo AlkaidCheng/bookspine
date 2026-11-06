@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from guidebook.converter import convert_markdown
+from bookspine.converter import convert_markdown
 
 # What Python-Markdown and pymdown-extensions gave for each source, which the adapters
 # keep. Only whitespace between tags may differ.

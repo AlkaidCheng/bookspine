@@ -1,4 +1,4 @@
-The compiled module guidebook._markdown contains the Rust standard library and
+The compiled module bookspine._markdown contains the Rust standard library and
 the crates listed here. Each is offered under the MIT licence, alone or as one
 of several choices, and is used here under that licence, whose text follows the
 list.

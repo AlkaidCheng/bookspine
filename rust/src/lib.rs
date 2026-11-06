@@ -1,4 +1,4 @@
-//! pulldown-cmark, as the Python module `guidebook._markdown`.
+//! pulldown-cmark, as the Python module `bookspine._markdown`.
 
 use pyo3::prelude::*;
 
