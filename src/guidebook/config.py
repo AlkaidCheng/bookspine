@@ -11,9 +11,9 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-import pyromark
 import yaml
 
+from guidebook import _markdown
 from guidebook.errors import BuildError
 from guidebook.safe_paths import require_path_component
 
@@ -30,14 +30,14 @@ OPENER_NAME = "index.md"
 DEFAULT_PYGMENTS_LIGHT = "friendly"
 DEFAULT_PYGMENTS_DARK = "github-dark"
 
-# What pyromark reads beyond CommonMark, each option documented at
-# https://monosans.github.io/pyromark/
+# What pulldown-cmark reads beyond CommonMark, each option documented at
+# https://docs.rs/pulldown-cmark/0.13.6/pulldown_cmark/struct.Options.html
 MARKDOWN_OPTIONS = (
-    pyromark.Options.ENABLE_DEFINITION_LIST
-    | pyromark.Options.ENABLE_HEADING_ATTRIBUTES
-    | pyromark.Options.ENABLE_MATH
-    | pyromark.Options.ENABLE_SMART_PUNCTUATION
-    | pyromark.Options.ENABLE_TABLES
+    _markdown.ENABLE_DEFINITION_LIST
+    | _markdown.ENABLE_HEADING_ATTRIBUTES
+    | _markdown.ENABLE_MATH
+    | _markdown.ENABLE_SMART_PUNCTUATION
+    | _markdown.ENABLE_TABLES
 )
 
 # Boxed environments that receive a running number within the chapter. Their names

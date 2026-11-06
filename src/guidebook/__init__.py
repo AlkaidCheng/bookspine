@@ -1,6 +1,8 @@
 """Build a textbook-style static site from Markdown chapters."""
 
-__version__ = "0.1.0"
+from importlib.metadata import version
+
+__version__ = version("guidebook")
 
 from guidebook.errors import BuildError
 from guidebook.site import BuildResult, build_book

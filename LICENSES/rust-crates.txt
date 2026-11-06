@@ -1,0 +1,55 @@
+The compiled module guidebook._markdown contains the Rust standard library and
+the crates listed here. Each is offered under the MIT licence, alone or as one
+of several choices, and is used here under that licence, whose text follows the
+list.
+
+Rust standard library <https://github.com/rust-lang/rust>
+    Copyright (c) The Rust Project Contributors
+
+bitflags <https://github.com/bitflags/bitflags>
+    Copyright (c) 2014 The Rust Project Developers
+
+libc <https://github.com/rust-lang/libc>
+    Copyright (c) The Rust Project Developers
+
+memchr <https://github.com/BurntSushi/memchr>
+    Copyright (c) 2015 Andrew Gallant
+
+once_cell <https://github.com/matklad/once_cell>
+    The project's licence file names no copyright holder.
+
+portable-atomic <https://github.com/taiki-e/portable-atomic>
+    The project's licence file names no copyright holder.
+
+pulldown-cmark <https://github.com/pulldown-cmark/pulldown-cmark>
+    Copyright 2015 Google Inc. All rights reserved.
+
+pulldown-cmark-escape <https://github.com/pulldown-cmark/pulldown-cmark>
+    Copyright 2015 Google Inc. All rights reserved.
+
+pyo3 <https://github.com/PyO3/pyo3>
+    Copyright (c) 2023-present PyO3 Project and Contributors. https://github.com/PyO3
+
+pyo3-ffi <https://github.com/PyO3/pyo3>
+    Copyright (c) 2023-present PyO3 Project and Contributors. https://github.com/PyO3
+
+unicase <https://github.com/seanmonstar/unicase>
+    Copyright (c) 2014-2026 Sean McArthur
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
