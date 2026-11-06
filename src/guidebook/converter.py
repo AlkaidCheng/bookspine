@@ -79,7 +79,8 @@ _PROTECTED_PATTERN = re.compile(
 _FOOTNOTE_REFERENCE = r"\[\^(?P<footnote>[^\]\s]+)\]"
 _KEYS = r"\+\+(?P<keys>[\w-]+(?:\+[\w-]+)*?)\+\+"
 
-# Python-Markdown's rule for turning a heading into an anchor, which books link to.
+# Python-Markdown's rule for turning a heading into an anchor, which books link to,
+# under the BSD license in LICENSES/Python-Markdown.txt.
 # https://github.com/Python-Markdown/markdown/blob/3.11.3/markdown/extensions/toc.py#L33
 _NON_WORD_PATTERN = re.compile(r"[^\w\s-]")
 _SEPARATOR_PATTERN = re.compile(r"[-\s]+")
@@ -116,7 +117,9 @@ class _Extras:
 def convert_markdown(text: str) -> str:
     """Return the HTML of the Markdown `text`."""
     extras = _Extras()
-    body = _set_attributes(extras.restore(_convert_blocks(text, extras)), extras)
+    # The walk measures indentation in spaces.
+    blocks = _convert_blocks(text.expandtabs(BLOCK_INDENT), extras)
+    body = _set_attributes(extras.restore(blocks), extras)
     body = _mark_text(body, extras)
     return _add_heading_anchors(body + _footnotes_html(extras)).strip()
 
