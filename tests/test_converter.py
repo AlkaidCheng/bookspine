@@ -44,6 +44,10 @@ REFERENCE_OUTPUT = {
     "++enter++ ++a++ ++f12++ ++page-up++ ++arrow-left++ ++cmd+s++ ++1++ ++tab++\n": '<p><span class="keys"><kbd class="key-enter">Enter</kbd></span> <span class="keys"><kbd class="key-a">A</kbd></span> <span class="keys"><kbd class="key-f12">F12</kbd></span> <span class="keys"><kbd class="key-page-up">Page Up</kbd></span> <span class="keys"><kbd class="key-arrow-left">Left</kbd></span> <span class="keys"><kbd class="key-command">Cmd</kbd><span>+</span><kbd class="key-s">S</kbd></span> <span class="keys"><kbd class="key-1">1</kbd></span> <span class="keys"><kbd class="key-tab">Tab</kbd></span></p>',
     "++foo++ and ++ctrl+foo++\n": "<p>++foo++ and ++ctrl+foo++</p>",
     "`++a++`\n": "<p><code>++a++</code></p>",
+    "!!! note\n\tA box indented by a tab.\n": '<div class="admonition note">\n<p class="admonition-title">Note</p>\n<p>A box indented by a tab.</p>\n</div>',
+    "```python\n\tx = 1\n```\n": '<div class="highlight"><pre><span></span><code>    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>\n</code></pre></div>',
+    "[^1]: One\n\n\tTwo\n\nA[^1]\n": '<p>A<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>\n<div class="footnote">\n<hr />\n<ol>\n<li id="fn:1">\n<p>One</p>\n<p>Two&#160;<a class="footnote-backref" href="#fnref:1" title="Back to text">&#8617;</a></p>\n</li>\n</ol>\n</div>',
+    "- a\n\n\tb\n": "<ul>\n<li>\n<p>a</p>\n<p>b</p>\n</li>\n</ul>",
 }
 
 
@@ -339,6 +343,7 @@ def test_no_marker_survives_any_text(seed: int) -> None:
         "[^a]: b\n",
         "*[a]: c\n",
         "- ",
+        "\t",
         "++a++ ",
         r"\begin{b}",
         r"\end{b}",

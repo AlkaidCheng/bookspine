@@ -20,3 +20,4 @@
 - Move the `.tool-group` of a code block with its margins when the window resizes (#14).
 - Keep coloured inline code clear of the text before it at phone width (#14).
 - Show a heading's `&` as written in the sidebar, where `number_headings` passed on its HTML entity (#15).
+- Expand tabs in `convert_markdown`, so the text of a box or footnote can be indented with them (#15).

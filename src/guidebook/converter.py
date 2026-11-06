@@ -116,7 +116,9 @@ class _Extras:
 def convert_markdown(text: str) -> str:
     """Return the HTML of the Markdown `text`."""
     extras = _Extras()
-    body = _set_attributes(extras.restore(_convert_blocks(text, extras)), extras)
+    # The walk measures indentation in spaces.
+    blocks = _convert_blocks(text.expandtabs(BLOCK_INDENT), extras)
+    body = _set_attributes(extras.restore(blocks), extras)
     body = _mark_text(body, extras)
     return _add_heading_anchors(body + _footnotes_html(extras)).strip()
 
