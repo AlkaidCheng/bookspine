@@ -87,6 +87,15 @@ Use `##` for sections and `###` for subsections; the build numbers them. An `##`
 Section anchors come from the heading text, so renaming a heading changes its link.
 `{: #my-id }` after a heading pins its anchor.
 
+A page can also use these forms:
+
+| Form | Effect |
+|---|---|
+| `[^note]`, with `[^note]: Text` on a line of its own | A footnote, listed at the end of the page. Indent further paragraphs of the note by four spaces. |
+| `*[HTML]: HyperText Markup Language` on a line of its own | A tooltip on every `HTML` in the page. |
+| `++ctrl+alt+delete++` | Those keys, drawn as keycaps. A name that is not a key leaves the text as written. |
+| `{: .class #id key="value" }` on the line after a paragraph or list item | Those attributes on it. |
+
 ### Parts and chapters
 
 `book.yaml` lists the parts and their chapters in reading order. Parts take Roman
@@ -119,10 +128,25 @@ scheme. A table followed by a paragraph starting `Table:` becomes a numbered tab
 a table with no caption takes no number. A button on each figure and table opens it
 enlarged.
 
+### Code
+
+A fenced code block takes the colours of the language named after its opening fence,
+which any of these options may follow:
+
+| Option | Effect |
+|---|---|
+| `title="app.py"` | A title above the block. |
+| `hl_lines="1 3-4"` | Marks those lines. |
+| `linenums="1"` | Numbers the lines, starting from that number. |
+
+Inline code takes a language's colours when it starts with `#!` and the language's name,
+as in `` `#!python x = 1` ``.
+
 ### Equations
 
-Write inline math as `$…$` and display math as `$$ … $$` on lines of their own. Every
-display equation is numbered, and `\notag` suppresses a number. `\label{eq:name}` and
+Write inline math as `$…$` or `\(…\)`, and display math as `$$ … $$` on lines of their
+own. `\[…\]` or a `\begin{…}` environment that starts a paragraph is display math too.
+Every display equation is numbered, and `\notag` suppresses a number. `\label{eq:name}` and
 `\eqref{eq:name}` reach any page in the book, so a label must be unique across it.
 Place `\label` after `\end{aligned}` or `\end{split}`, because MathJax discards one
 written inside them. A page with no math does not load MathJax.
@@ -224,7 +248,7 @@ prints on its default paper.
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
-| `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. |
+| `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 

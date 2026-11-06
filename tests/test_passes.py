@@ -327,6 +327,7 @@ def test_each_line_of_code_gets_a_span_with_its_indentation() -> None:
     [
         "```python\nx = 1\n\n\ny = 2\n```\n",
         '```python\nx = """a\n  b\n"""\n```\n',
+        '```python hl_lines="2"\nx = 1\ny = 2\nz = 3\n```\n',
         "```\n  a < b && c\n```\n",
         "    indented\n      more\n",
     ],
@@ -351,6 +352,19 @@ def test_each_newline_stays_inside_its_line() -> None:
         '<code><span class="line">a\n</span><span class="line">\n</span>'
         '<span class="line">b\n</span></code>'
     ) in page.body_html
+
+
+def test_a_block_with_a_title_is_split() -> None:
+    page = code_page('```python title="a.py"\nx = 1\n```\n')
+    split_code_lines(page)
+    assert 'class="line"' in page.body_html
+
+
+def test_a_block_with_line_numbers_is_left_alone() -> None:
+    page = code_page('```python linenums="1"\nx = 1\n```\n')
+    before = page.body_html
+    split_code_lines(page)
+    assert page.body_html == before
 
 
 def test_inline_code_is_left_alone() -> None:
