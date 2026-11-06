@@ -7,7 +7,7 @@ name = "guidebook"
 dynamic = ["version"]
 description = "Build a textbook-style static site from Markdown chapters."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Alkaid Cheng", email = "alkaidc@stanford.edu" }]
@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: Markdown",
     "Typing :: Typed",
 ]
-dependencies = ["Jinja2", "Markdown", "Pygments", "PyYAML", "pymdown-extensions"]
+dependencies = ["Jinja2", "Pygments", "PyYAML", "pyromark"]
 
 [project.optional-dependencies]
 dev = [
@@ -31,7 +31,6 @@ dev = [
     "mypy",
     "pytest",
     "ruff",
-    "types-Markdown",
     "types-Pygments",
     "types-PyYAML",
 ]
@@ -55,11 +54,11 @@ testpaths = ["tests"]
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -68,7 +67,7 @@ select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 files = ["src/guidebook"]
 # types-Pygments leaves HtmlFormatter.get_style_defs without annotations.

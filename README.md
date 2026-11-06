@@ -26,7 +26,7 @@ label used twice. A failed build leaves `site/` as it was.
 pip install guidebook
 ```
 
-guidebook needs Python 3.10 or later and runs on Linux, macOS and Windows.
+guidebook needs Python 3.11 or later and runs on Linux, macOS and Windows.
 
 ## Usage
 
@@ -71,7 +71,9 @@ that are in force.
 
 ### Pages
 
-Every page starts with a YAML front matter block.
+Pages follow [CommonMark](https://commonmark.org/), with tables, definition lists,
+footnotes and curly punctuation added, and every page starts with a YAML front matter
+block.
 
 | Key | Meaning |
 |---|---|
@@ -222,7 +224,7 @@ prints on its default paper.
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
-| `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
+| `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 
