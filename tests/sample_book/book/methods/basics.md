@@ -67,6 +67,12 @@ def add(a, b):
     return a + b
 ```
 
+```python title="add.py" linenums="9"
+# A comment long enough to run past the edge of the block, which scrolls instead of wrapping, as every block with line numbers does.
+def add(a, b):
+    return a + b
+```
+
 ## Marks
 
 A footnote[^short], the same one again[^short], and a longer one[^long]. Press

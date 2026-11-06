@@ -385,6 +385,12 @@ code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal;
   color: var(--ink-3);
   padding: 0.4rem 1.1rem 0;
 }
+/* A block with line numbers is a table of two cells, not a table of data. */
+.highlighttable { width: auto; border: 0; font-size: inherit; line-height: inherit; }
+.highlighttable td { padding: 0; }
+.highlighttable th.filename { display: table-cell; padding: 0; font-weight: 400; text-align: left; }
+.highlighttable .linenos pre { padding-right: 0; text-align: right; user-select: none; }
+.highlighttable .linenos .normal { color: var(--ink-3); }
 
 /* --------------------------------------------------------------- figures */
 
@@ -664,7 +670,7 @@ body.lightbox-open { overflow: hidden; }
   .pagenav { grid-template-columns: 1fr; }
   .pagenav-next { text-align: left; }
   .prose h2 { font-size: 1.35rem; }
-  .highlight { margin-left: -1rem; margin-right: -1rem; border-radius: 0; border-left: 0; border-right: 0; }
+  div.highlight { margin-left: -1rem; margin-right: -1rem; border-radius: 0; border-left: 0; border-right: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

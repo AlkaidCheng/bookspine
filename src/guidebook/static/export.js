@@ -799,15 +799,20 @@
 
   /* A code block or equation has no caption, so its buttons float at a corner. `side` is
      the corner's side, `element` the component whose margins the host contains, and
-     `inset` their distance from that component's edges. */
+     `inset` their distance from that component's edges. Those margins change with the
+     window's width, so the buttons move when it resizes. */
   function makeCorner(component, side, element, inset) {
     component.host.classList.add("tool-host");
     var tools = document.createElement("div");
-    var style = getComputedStyle(element);
-    var margin = side === "left" ? style.marginLeft : style.marginRight;
     tools.className = "tool-group tool-" + side;
-    tools.style.top = "calc(" + style.marginTop + " + " + inset + ")";
-    tools.style[side] = "calc(" + margin + " + " + inset + ")";
+    function place() {
+      var style = getComputedStyle(element);
+      var margin = side === "left" ? style.marginLeft : style.marginRight;
+      tools.style.top = "calc(" + style.marginTop + " + " + inset + ")";
+      tools.style[side] = "calc(" + margin + " + " + inset + ")";
+    }
+    place();
+    window.addEventListener("resize", place);
     component.host.appendChild(tools);
     return tools;
   }

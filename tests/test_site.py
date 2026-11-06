@@ -274,6 +274,15 @@ def test_code_colours_come_from_the_config(project_dir: Path) -> None:
     ) != default_css
 
 
+def test_the_dark_scheme_leaves_the_light_schemes_line_numbers_alone(
+    project_dir: Path,
+) -> None:
+    site_dir = build_book(project_dir).site_dir
+    css = (site_dir / "static" / "pygments.css").read_text(encoding="utf-8")
+    assert css.count("td.linenos .normal") == 1
+    assert '[data-theme="dark"] .highlight .k ' in css
+
+
 def test_an_unknown_colour_style_stops_the_build(project_dir: Path) -> None:
     add_to_config(project_dir, "\npygments_dark: no-such-style\n")
     with pytest.raises(BuildError, match="book.yaml: .*no-such-style"):
