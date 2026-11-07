@@ -501,10 +501,15 @@ def add_to_page(project_dir: Path, text: str) -> None:
     page_path.write_text(page_path.read_text(encoding="utf-8") + text, encoding="utf-8")
 
 
+def missing_anchor_message(source: str) -> str:
+    """Return the pattern of the error, whose paths use the platform's separator."""
+    return re.escape(f"no anchor #nowhere in {Path(source)}")
+
+
 def test_a_link_to_a_missing_anchor_stops_the_build(project_dir: Path) -> None:
     add_to_page(project_dir, "\n[Nowhere](split/index.md#nowhere)\n")
     with pytest.raises(
-        BuildError, match="no anchor #nowhere in methods/split/index.md"
+        BuildError, match=missing_anchor_message("methods/split/index.md")
     ):
         build_book(project_dir)
 
@@ -513,7 +518,7 @@ def test_a_link_to_a_missing_anchor_on_its_page_stops_the_build(
     project_dir: Path,
 ) -> None:
     add_to_page(project_dir, "\n[Nowhere](#nowhere)\n")
-    with pytest.raises(BuildError, match="no anchor #nowhere in methods/basics.md"):
+    with pytest.raises(BuildError, match=missing_anchor_message("methods/basics.md")):
         build_book(project_dir)
 
 
