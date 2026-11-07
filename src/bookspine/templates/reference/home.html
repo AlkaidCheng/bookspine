@@ -1,0 +1,42 @@
+{% extends "reference/base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<article class="home">
+  <header class="title-page">
+    <p class="title-kicker">{{ book.kicker }}</p>
+    <h1 class="book-title">{{ book.title }}</h1>
+    {% if book.subtitle %}<p class="book-subtitle">{{ book.subtitle }}</p>{% endif %}
+    <p class="book-author">{{ book.author }}</p>
+    <p class="book-edition">Revised {{ build_date }}</p>
+  </header>
+
+  <section class="contents" id="contents">
+    <h2 class="unnumbered">Contents</h2>
+    {% for part in parts %}
+    <div class="contents-part">
+      <a class="contents-part-link" href="{{ page.href(part) }}">
+        {% if part.icon %}{{ icons[part.icon] | safe }}{% endif %}
+        <span class="contents-part-title">{{ part.title }}</span>
+      </a>
+      {% if part.chapters %}
+      {% with entries = part.chapters %}{% include "reference/page_list.html" %}{% endwith %}
+      {% else %}
+      <p class="contents-empty">In preparation.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% if glossary_page %}
+    <div class="contents-part">
+      <a class="contents-part-link" href="{{ page.href(glossary_page) }}">
+        <span class="contents-part-title">{{ glossary_page.title }}</span>
+      </a>
+      {% with entries = glossary_page.chapters %}{% include "reference/page_list.html" %}{% endwith %}
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+</article>
+{% endblock %}

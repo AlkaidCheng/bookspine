@@ -1,0 +1,12 @@
+<ol class="chapter-list unnumbered">
+  {% for entry in entries %}
+  <li>
+    <a href="{{ page.href(entry) }}">
+      <span class="chapter-list-body">
+        <span class="chapter-list-title">{{ entry.title }}{% if entry.status %} <span class="badge">{{ entry.status | replace('-', ' ') }}</span>{% endif %}</span>
+        {% if entry.summary_html %}<span class="chapter-list-summary">{{ entry.summary_html | safe }}</span>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>

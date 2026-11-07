@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% macro heading_list(sections) %}
+<ol class="toc-sections">
+  {% for s in sections if s.level == 2 %}
+  <li class="unnumbered"><a href="#{{ s.id }}"><span class="toc-title">{{ s.title }}</span></a></li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+{% block running_head %}
+    {% if page.part %}
+      <span class="rh-part">{{ page.part.title }}</span>
+      <span class="rh-sep">/</span>
+      <span class="rh-chapter">{{ page.title }}</span>
+    {% elif page.kind == "part" %}
+      <span class="rh-part">{{ page.title }}</span>
+    {% elif page.kind == "glossary" %}
+      <span class="rh-part">{{ glossary_page.title }}</span>
+    {% endif %}
+{% endblock %}
+{% block contents %}
+      {% for part in parts %}
+      <section class="toc-part{% if page == part or page.part == part %} current{% endif %}">
+        <a class="toc-part-link{% if page == part %} active{% endif %}" href="{{ page.href(part) }}">
+          {% if part.icon %}{{ icons[part.icon] | safe }}{% endif %}
+          <span class="toc-part-title">{{ part.title }}</span>
+        </a>
+        {% if part.chapters %}
+        <ol class="toc-chapters">
+          {% for chapter in part.chapters %}
+          <li class="unnumbered{% if chapter == page or chapter == page.chapter %} active{% endif %}">
+            <a href="{{ page.href(chapter) }}"><span class="toc-title">{{ chapter.title }}</span></a>
+            {% if chapter.section_pages and (chapter == page or chapter == page.chapter) %}
+            <ol class="toc-sections">
+              {% for section in chapter.section_pages %}
+              <li class="unnumbered{% if section == page %} active{% endif %}">
+                <a href="{{ page.href(section) }}"><span class="toc-title">{{ section.title }}</span></a>
+                {% if section == page and page.sections %}{{ heading_list(page.sections) }}{% endif %}
+              </li>
+              {% endfor %}
+            </ol>
+            {% elif chapter == page and page.sections %}
+            {{ heading_list(page.sections) }}
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+        {% endif %}
+      </section>
+      {% endfor %}
+{% endblock %}
+{% block pagenav %}{% endblock %}

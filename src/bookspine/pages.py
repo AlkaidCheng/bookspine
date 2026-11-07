@@ -86,6 +86,8 @@ class Page:
         The glossary entries the page defines.
     body_html : str
         The page's HTML, built up by the passes.
+    lede_html, summary_html : str
+        The page's first paragraph and its summary as HTML, in the reference layout.
     prev, next : Page or None
         The neighbouring pages in reading order.
     """
@@ -107,6 +109,8 @@ class Page:
     terms: list[GlossaryEntry] = field(default_factory=list)
     named_equations: list[GlossaryEntry] = field(default_factory=list)
     body_html: str = ""
+    lede_html: str = ""
+    summary_html: str = ""
     prev: "Page | None" = None
     next: "Page | None" = None
 
@@ -119,6 +123,15 @@ class Page:
         return str(self.meta.get("summary", "")).strip()
 
     @property
+    def description(self) -> str:
+        """The summary as plain text, for the page's meta description."""
+        return self.summary.replace("`", "")
+
+    @property
+    def icon(self) -> str:
+        return str(self.meta.get("icon", "")).strip()
+
+    @property
     def chapter_number(self) -> str:
         """The number of the chapter this page is in, empty outside chapters."""
         if self.kind == "section":
@@ -129,6 +142,8 @@ class Page:
     @property
     def has_numbered_headings(self) -> bool:
         """Whether H2/H3 are numbered; an opener with section pages leaves them plain."""
+        if not self.number:
+            return False
         return self.kind == "section" or (
             self.kind == "chapter" and not self.section_pages
         )
@@ -265,6 +280,9 @@ def load_pages(config: BookConfig, book_dir: Path) -> list[Page]:
                 section.counters = chapter.counters
                 chapter.section_pages.append(section)
                 pages.append(section)
+    if config.is_reference:
+        for page in pages:
+            page.number = ""
     for before, after in zip(pages, pages[1:], strict=False):
         before.next = after
         after.prev = before

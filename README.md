@@ -4,7 +4,7 @@ bookspine turns a directory of Markdown chapters into a textbook-style static si
 with numbered parts, chapters, sections, equations, figures, tables and boxed
 environments, citations, client-side search, and light and dark colour schemes. The
 theme comes with the package, so a book holds only its content and one configuration
-file.
+file. A second layout leaves out the numbers, for a site that readers look things up in.
 
 ![The build reads book.yaml and the Markdown pages, converts them to HTML, numbers and resolves them, applies the theme and writes the site.](https://raw.githubusercontent.com/AlkaidCheng/bookspine/main/docs/pipeline.svg)
 
@@ -234,6 +234,26 @@ name, so `help.md` is served at `help/`, and the build stops if a part or the gl
 holds that address. The page has no number, stays out of the contents and of the
 previous and next links, and is covered by the search.
 
+### Reference layout
+
+`layout: reference` in `book.yaml` suits a site that readers consult instead of reading in
+order, such as a set of command guides. The project keeps the same shape, and a part
+becomes a topic that lists its pages.
+
+| What | In the reference layout |
+|---|---|
+| Parts, chapters and sections | Have no numbers, and the words Part and Chapter go. Figures, tables and boxes keep one count per chapter. |
+| A page's first paragraph | Moves to the page head as its introduction, and stays in the search. |
+| `summary` | Appears only in the contents, and may use inline Markdown such as `` `code` ``. |
+| `icon` in a part's `index.md` | Names an SVG in `theme/icons/`, placed beside the topic's title in the text's colour. |
+| A part with no chapters | Is listed as in preparation. |
+| A page with two or more sections | Lists them at its head under "On this page". |
+| The home page | Shows the contents before its text. |
+| Previous and next links | Go. |
+| Inline code | Breaks only at its spaces, so a token like `:<line>` stays whole. |
+
+A search result names the topic and the page.
+
 ## Exporting
 
 Every table, figure, code block and display equation has a button that opens a menu of
@@ -274,6 +294,9 @@ prints on its default paper.
 | `edit_url` | empty | The prefix of a page's edit link, followed by its path under `book/`. No link appears when it is empty. |
 | `help_page` | empty | The Markdown file in `book/` [linked from the foot of the sidebar](#help-page). |
 | `parts` | empty | The parts and chapters, as above. |
+| `layout` | `book` | `book` for numbered pages, or [`reference`](#reference-layout) for unnumbered ones. |
+| `search_scope` | `book`, or `site` in the reference layout | What the search box offers to search, as in "Search the book". |
+| `search_hint` | `Type to search chapter and section text.`, or `Type what you are looking for.` in the reference layout | The line under the search box. |
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
@@ -299,7 +322,8 @@ first.
 
 | Path | Effect |
 |---|---|
-| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter`, `section`, `glossary` and `help`. |
+| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter`, `section`, `glossary` and `help`. The reference layout's own are under `reference/`: `base`, `home`, `part`, `chapter`, `section` and `page_list`. |
+| `theme/icons/NAME.svg` | An icon for a part in the [reference layout](#reference-layout). |
 | `theme/static/NAME` | Replaces the package's static file of that name, or adds a new one. A `pygments.css` here takes the place of the generated one. |
 
 A template replaced whole no longer receives changes from new releases, so extend the

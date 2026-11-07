@@ -187,3 +187,32 @@ def test_project_finds_its_files_from_the_directory(tmp_path: Path) -> None:
 def test_project_takes_another_site_directory(tmp_path: Path) -> None:
     project = Project.locate(tmp_path, tmp_path / "public")
     assert project.site_dir == tmp_path.resolve() / "public"
+
+
+def test_the_layout_defaults_to_a_numbered_book(tmp_path: Path) -> None:
+    config = load_config(config_path_with(tmp_path))
+    assert config.layout == "book"
+    assert not config.is_reference
+    assert config.search_scope == "book"
+
+
+def test_the_reference_layout_has_its_own_search_wording(tmp_path: Path) -> None:
+    config = load_config(config_path_with(tmp_path, layout="reference"))
+    assert config.is_reference
+    assert config.search_scope == "site"
+    assert "chapter" not in config.search_hint
+
+
+def test_a_book_can_word_its_own_search(tmp_path: Path) -> None:
+    config = load_config(
+        config_path_with(
+            tmp_path, layout="reference", search_scope="guides", search_hint="Type."
+        )
+    )
+    assert config.search_scope == "guides"
+    assert config.search_hint == "Type."
+
+
+def test_an_unknown_layout_stops_the_build(tmp_path: Path) -> None:
+    with pytest.raises(BuildError, match="layout must be one of book, reference"):
+        load_config(config_path_with(tmp_path, layout="magazine"))

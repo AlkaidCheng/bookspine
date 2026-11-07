@@ -15,6 +15,7 @@ from pygments.util import ClassNotFound
 
 from bookspine.config import (
     BUILD_DATE_FORMAT,
+    REFERENCE_TEMPLATES_DIR_NAME,
     STATIC_DIR_NAME,
     TEMPLATES_DIR_NAME,
     BookConfig,
@@ -37,12 +38,17 @@ from bookspine.passes import (
     number_boxes,
     number_figures_and_tables,
     number_headings,
+    prepare_reference_page,
     resolve_citations,
     rewrite_links,
     search_entries,
     split_code_lines,
 )
-from bookspine.safe_paths import replace_site, require_site_dir
+from bookspine.safe_paths import (
+    replace_site,
+    require_path_component,
+    require_site_dir,
+)
 
 # Names in the package and in the site.
 PACKAGE_NAME = "bookspine"
@@ -52,6 +58,9 @@ NOJEKYLL_NAME = ".nojekyll"
 
 # An override reaches the package's own copy of a template under this prefix.
 PACKAGE_TEMPLATE_PREFIX = "bookspine"
+
+# What an icon's <svg> tag gains, so that it takes the size and colour book.css gives it.
+ICON_ATTRIBUTES = 'class="icon" aria-hidden="true" fill="currentColor"'
 
 # Replaces the build date when set: https://reproducible-builds.org/specs/source-date-epoch/
 SOURCE_DATE_EPOCH_VARIABLE = "SOURCE_DATE_EPOCH"
@@ -132,9 +141,7 @@ def build_book(
     )
     config = load_config(project.config_path)
     pages = load_pages(config, project.book_dir)
-    converted = convert_pages(
-        pages, project.book_dir, config.glossary, config.wrap_code
-    )
+    converted = convert_pages(pages, project.book_dir, config)
     replace_site(project.site_dir, site_files(project, config, pages, converted))
     return BuildResult(
         site_dir=project.site_dir,
@@ -146,10 +153,7 @@ def build_book(
 
 
 def convert_pages(
-    pages: list[Page],
-    book_dir: Path,
-    has_glossary: bool = True,
-    wrap_code: bool = True,
+    pages: list[Page], book_dir: Path, config: BookConfig
 ) -> ConvertedPages:
     """Turn every page's Markdown into numbered, linked HTML.
 
@@ -160,10 +164,8 @@ def convert_pages(
         glossary's are appended.
     book_dir : Path
         The book's sources.
-    has_glossary : bool, optional
-        Whether ``\\glossary`` tags make glossary pages.
-    wrap_code : bool, optional
-        Whether a long line of code wraps instead of scrolling.
+    config : BookConfig
+        The book's settings.
 
     Raises
     ------
@@ -187,11 +189,13 @@ def convert_pages(
         converted.search_index += search_entries(page)
         # After the search text, which would otherwise split at every <wbr>.
         break_bare_urls(page)
-        if wrap_code:
+        if config.wrap_code:
             split_code_lines(page)
+        if config.is_reference:
+            prepare_reference_page(page)
 
     last_page = next(page for page in reversed(pages) if page.kind != "help")
-    for glossary_page in make_glossary_pages(pages) if has_glossary else []:
+    for glossary_page in make_glossary_pages(pages) if config.glossary else []:
         last_page.next = glossary_page
         glossary_page.prev = last_page
         last_page = glossary_page
@@ -245,6 +249,34 @@ def make_environment(project: Project) -> jinja2.Environment:
     )
 
 
+def read_icons(project: Project, pages: list[Page]) -> dict[str, str]:
+    """Return the SVG of each part's icon, by its name, ready to place in a page.
+
+    Raises
+    ------
+    BuildError
+        If an icon's name is not a plain file name, or ``theme/icons/`` lacks the file.
+    """
+    icons = {}
+    for page in pages:
+        if page.kind != "part" or not page.icon:
+            continue
+        name = require_path_component(page.icon, what=f"{page.source_path}: icon")
+        icon_path = project.icons_dir / f"{name}.svg"
+        if not icon_path.is_file():
+            raise BuildError(f"{page.source_path}: no such icon: {name}")
+        svg = icon_path.read_text(encoding="utf-8").strip()
+        icons[name] = svg.replace("<svg", f"<svg {ICON_ATTRIBUTES}", 1)
+    return icons
+
+
+def template_names(config: BookConfig, name: str) -> list[str]:
+    """Return where to look for the template `name`, in order."""
+    if config.is_reference:
+        return [f"{REFERENCE_TEMPLATES_DIR_NAME}/{name}", name]
+    return [name]
+
+
 def page_files(
     project: Project, config: BookConfig, pages: list[Page]
 ) -> dict[str, bytes]:
@@ -257,17 +289,20 @@ def page_files(
     """
     environment = make_environment(project)
     environment.globals.update(
+        base_template=template_names(config, "base.html")[0],
         book=config,
         build_date=build_date().strftime(BUILD_DATE_FORMAT),
         glossary_page=next((page for page in pages if page.kind == "glossary"), None),
         help_page=next((page for page in pages if page.kind == "help"), None),
+        icons=read_icons(project, pages),
         mathjax_url=MATHJAX_URL,
     )
     parts = [page for page in pages if page.kind == "part"]
     files = {}
     for page in pages:
         try:
-            template = environment.get_template(f"{page.kind}.html")
+            names = template_names(config, f"{page.kind}.html")
+            template = environment.select_template(names)
             page_html = template.render(page=page, parts=parts, load_mathjax=False)
             # Only the finished page shows all of its text: the sidebar prints headings
             # from other pages, and an override can print anything.

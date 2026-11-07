@@ -186,6 +186,10 @@ kbd {
   color: var(--ink-3);
 }
 .toc-part-title { font-weight: 600; font-size: 0.95rem; }
+svg.icon { width: 1.1em; height: 1.1em; flex: none; vertical-align: -0.15em; }
+.toc-part-link:has(> .icon) { display: flex; align-items: center; gap: 0.5rem; }
+.toc-part-link .icon { color: var(--ink-3); }
+.toc-part-link:hover .icon, .toc-part-link.active .icon { color: var(--accent-ink); }
 .toc-chapters, .toc-sections { list-style: none; margin: 0; padding: 0; }
 .toc-chapters > li > a,
 .toc-sections > li > a {
@@ -241,6 +245,7 @@ kbd {
   font-weight: 600;
 }
 .chapter-kicker a { color: inherit; }
+.chapter-kicker .icon { width: 1.25em; height: 1.25em; vertical-align: -0.3em; }
 .chapter-number {
   font-size: 4.5rem;
   font-weight: 300;
@@ -344,7 +349,7 @@ kbd {
 
 /* Ligatures would hide the characters a reader has to type. */
 code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal; font-variant-ligatures: none; }
-.prose code {
+.prose code, .lede code, .chapter-list-summary code {
   font-size: 0.86em;
   background: var(--code-bg);
   border: 1px solid var(--rule-2);
@@ -353,6 +358,8 @@ code, pre, .highlight { font-family: var(--mono); font-feature-settings: normal;
   hyphens: none;
 }
 .prose p code, .prose li code { overflow-wrap: anywhere; }
+.lede code { font-style: normal; }
+code .tok { white-space: nowrap; }
 .prose pre code, .highlight code { background: none; border: 0; padding: 0; font-size: inherit; }
 .highlight {
   margin: 1.25rem 0;
@@ -565,6 +572,9 @@ ol.references li:target { background: var(--accent-soft); }
 .contents-part-link { display: block; color: var(--ink); padding-bottom: 0.5rem; border-bottom: 1px solid var(--ink); margin-bottom: 0.25rem; }
 .contents-part-link:hover { text-decoration: none; color: var(--accent-ink); }
 .contents-part-title { display: block; font-size: 1.5rem; font-weight: 600; }
+.contents-part-link:has(> .icon) { display: flex; align-items: center; gap: 0.6rem; }
+.contents-part-link .icon { width: 1.4rem; height: 1.4rem; color: var(--accent-ink); }
+.contents-empty { margin: 0.6rem 0.5rem 0; font-family: var(--sans); font-size: 0.9rem; color: var(--ink-3); }
 .chapter-list { list-style: none; margin: 0; padding: 0; }
 .chapter-list li { border-bottom: 1px solid var(--rule-2); }
 .chapter-list li:last-child { border-bottom: 0; }

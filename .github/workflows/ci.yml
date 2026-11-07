@@ -82,3 +82,5 @@ jobs:
           bookspine build "$GITHUB_WORKSPACE/tests/sample_book" --site-dir sample-site
           test -f sample-site/methods/split/second/index.html
           test -f sample-site/static/book.css
+          bookspine build "$GITHUB_WORKSPACE/tests/sample_reference" --site-dir reference-site
+          test -f reference-site/tools/deep/first/index.html

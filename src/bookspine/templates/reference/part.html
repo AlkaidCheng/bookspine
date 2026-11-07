@@ -1,0 +1,21 @@
+{% extends "reference/base.html" %}
+{% block content %}
+<article class="part">
+  <header class="part-head">
+    <p class="chapter-kicker">{% if page.icon %}{{ icons[page.icon] | safe }} {% endif %}Topic</p>
+    <h1 class="part-title">{{ page.title }}</h1>
+    {% if page.lede_html %}<p class="lede">{{ page.lede_html | safe }}</p>{% endif %}
+  </header>
+  <section class="part-contents">
+    <h2 class="unnumbered" id="pages">Pages</h2>
+    {% if page.chapters %}
+    {% with entries = page.chapters %}{% include "reference/page_list.html" %}{% endwith %}
+    {% else %}
+    <p class="contents-empty">The pages for this topic are in preparation.</p>
+    {% endif %}
+  </section>
+  <div class="prose">
+    {{ page.body_html | safe }}
+  </div>
+</article>
+{% endblock %}
