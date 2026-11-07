@@ -352,3 +352,115 @@ def test_no_marker_survives_any_text(seed: int) -> None:
     for _ in range(50):
         html = convert_markdown("".join(rng.choices(pieces, k=30)))
         assert not re.search("[\ue000-\ue007]", html)
+
+
+TWO_TABS = """\
+=== "One"
+
+    First.
+
+=== "Two"
+
+    Second.
+"""
+
+
+def tab_set_classes(body: str) -> list[str]:
+    return re.findall(r'<div class="(tabbed-set[^"]*)">', body)
+
+
+def test_tabs_in_a_row_make_one_set() -> None:
+    body = convert_markdown(TWO_TABS)
+    assert tab_set_classes(body) == ["tabbed-set"]
+    assert re.findall(r"<label[^>]*>(.*?)</label>", body) == ["One", "Two"]
+    assert "<p>First.</p>" in body
+    assert "<p>Second.</p>" in body
+
+
+def test_only_the_first_tab_starts_checked() -> None:
+    inputs = re.findall(r"<input [^>]*>", convert_markdown(TWO_TABS))
+    assert ["checked" in tab_input for tab_input in inputs] == [True, False]
+
+
+def test_each_label_names_the_input_before_it() -> None:
+    pairs = re.findall(
+        r'id="([^"]+)"[^>]*>\n<label for="([^"]+)">', convert_markdown(TWO_TABS)
+    )
+    assert len(pairs) == 2
+    assert all(tab_id == target for tab_id, target in pairs)
+
+
+def test_tab_ids_stay_unique_across_a_page() -> None:
+    body = convert_markdown(f"{TWO_TABS}\nBetween.\n\n{TWO_TABS}")
+    ids = re.findall(r'<input [^>]*id="([^"]+)"', body)
+    assert len(ids) == 4
+    assert len(set(ids)) == 4
+
+
+def test_text_between_tabs_starts_a_new_set() -> None:
+    body = convert_markdown(f"{TWO_TABS}\nBetween.\n\n{TWO_TABS}")
+    assert len(tab_set_classes(body)) == 2
+    assert "<p>Between.</p>" in body
+
+
+def test_the_text_after_a_set_stays_outside_it() -> None:
+    body = convert_markdown(f"{TWO_TABS}\nAfter.\n")
+    assert body.endswith("</div>\n</div>\n<p>After.</p>")
+
+
+def test_a_label_reads_as_markdown() -> None:
+    body = convert_markdown('=== "The `ls` tool"\n\n    Text.\n')
+    assert '">The <code>ls</code> tool</label>' in body
+
+
+def test_tabs_of_code_alone_make_a_card() -> None:
+    body = convert_markdown(
+        '=== "A"\n\n    ```text\n    a\n    ```\n\n'
+        '=== "B"\n\n    ```python title="b.py"\n    b = 1\n    ```\n'
+    )
+    assert tab_set_classes(body) == ["tabbed-set code-card"]
+
+
+def test_a_tab_with_line_numbers_still_makes_a_card() -> None:
+    body = convert_markdown('=== "A"\n\n    ```python linenums="1"\n    a\n    ```\n')
+    assert tab_set_classes(body) == ["tabbed-set code-card"]
+
+
+@pytest.mark.parametrize(
+    "panels",
+    [
+        '=== "A"\n\n    ```text\n    a\n    ```\n\n    Prose.\n',
+        '=== "A"\n\n    ```text\n    a\n    ```\n\n=== "B"\n\n    Prose.\n',
+        '=== "A"\n\n=== "B"\n',
+    ],
+)
+def test_a_tab_with_anything_but_code_keeps_the_plain_set(panels: str) -> None:
+    assert tab_set_classes(convert_markdown(panels)) == ["tabbed-set"]
+
+
+def test_tabs_each_holding_a_card_make_a_switch() -> None:
+    card = '    === "A"\n\n        ```text\n        a\n        ```\n'
+    body = convert_markdown(f'=== "One"\n\n{card}\n=== "Two"\n\n{card}')
+    assert tab_set_classes(body) == [
+        "tabbed-set card-switch",
+        "tabbed-set code-card",
+        "tabbed-set code-card",
+    ]
+
+
+def test_tabs_holding_plain_sets_are_no_switch() -> None:
+    body = convert_markdown('=== "One"\n\n    === "A"\n\n        Prose.\n')
+    assert tab_set_classes(body) == ["tabbed-set", "tabbed-set"]
+
+
+def test_a_box_can_hold_tabs_and_a_tab_a_box() -> None:
+    inner_tabs = '!!! note\n\n    === "A"\n\n        Text.\n'
+    assert tab_set_classes(convert_markdown(inner_tabs)) == ["tabbed-set"]
+    inner_box = convert_markdown('=== "A"\n\n    !!! note\n\n        Text.\n')
+    assert '<div class="tabbed-block">\n<div class="admonition note">' in inner_box
+
+
+def test_a_tab_line_in_a_code_block_stays_code() -> None:
+    body = convert_markdown('```text\n=== "A"\n```\n')
+    assert not tab_set_classes(body)
+    assert "=== " in body

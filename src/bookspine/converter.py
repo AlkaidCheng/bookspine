@@ -26,6 +26,11 @@ BLOCK_INDENT = 4
 # The tooltip of a link from a footnote back to the text.
 FOOTNOTE_BACKLINK_TITLE = "Back to text"
 
+# The classes of a tab set, which book.css draws.
+TAB_SET_CLASS = "tabbed-set"
+CODE_CARD_CLASS = f"{TAB_SET_CLASS} code-card"
+CARD_SWITCH_CLASS = f"{TAB_SET_CLASS} card-switch"
+
 # What the walk takes out stands in the page as a marker while pulldown-cmark runs.
 # Private-use characters cannot come from a book by accident.
 _BLOCK_MARKER = "\ue000{}\ue001"
@@ -38,6 +43,7 @@ _BOX_PATTERN = re.compile(
     r"^(?P<indent> *)(?P<marker>!!!|\?\?\?\+?) +(?P<kinds>[\w-]+(?: +[\w-]+)*)"
     r'(?: +"(?P<title>[^"]*)")? *$'
 )
+_TAB_PATTERN = re.compile(r'^(?P<indent> *)=== +"(?P<label>[^"]*)" *$')
 _FENCE_PATTERN = re.compile(r"^(?P<indent> *)(?P<fence>`{3,}|~{3,})[ \t]*(?P<info>.*)$")
 _CODE_OPTION_PATTERN = re.compile(r'(\w+)="([^"]*)"')
 _FOOTNOTE_PATTERN = re.compile(r"^\[\^(?P<label>[^\]\s]+)\]:[ \t]*(?P<text>.*)$")
@@ -60,6 +66,10 @@ _CODE_BLOCK_PATTERN = re.compile(
     r'<pre><code(?: class="language-([^"\ue004]*)(?:\ue004(\d+)\ue005)?")?>'
     r"(.*?)</code></pre>",
     re.S,
+)
+# A finished code block. Its source is escaped, so the closing tags are its own.
+_CODE_HTML_PATTERN = re.compile(
+    r'<div class="highlight">.*?</code></pre>(?:</div></td></tr></table>)?</div>', re.S
 )
 _INLINE_CODE_PATTERN = re.compile(r"<code>(?:#!|:::)([\w#+.-]+) (.+?)</code>")
 _ATTRIBUTE_TARGET_PATTERN = re.compile(
@@ -97,6 +107,7 @@ class _Extras:
     abbreviations: dict[str, str] = field(default_factory=dict)
     footnotes: dict[str, str] = field(default_factory=dict)
     footnote_references: dict[str, int] = field(default_factory=dict)
+    tab_set_count: int = 0
 
     def mark(self, block: str, marker_format: str = _BLOCK_MARKER) -> str:
         """Return a marker for the HTML `block`."""
@@ -158,6 +169,8 @@ def _lift(text: str, extras: _Extras) -> str:
             kept.append(line)
         elif box := _BOX_PATTERN.match(line):
             index = _lift_box(box, lines, index, kept, extras)
+        elif tab := _TAB_PATTERN.match(line):
+            index = _lift_tabs(tab, lines, index, kept, extras)
         elif footnote := _FOOTNOTE_PATTERN.match(line):
             index = _lift_footnote(footnote, lines, index, extras)
         elif abbreviation := _ABBREVIATION_PATTERN.match(line):
@@ -223,6 +236,60 @@ def _box_html(box: re.Match[str], body: str) -> str:
         f'<details class="{kinds}"{is_open}>\n<summary>{title_html}</summary>\n'
         f"{body}\n</details>"
     )
+
+
+def _lift_tabs(
+    first: re.Match[str], lines: list[str], index: int, kept: list[str], extras: _Extras
+) -> int:
+    """Take out the tabs in a row from `first`, which make one set."""
+    indent = len(first["indent"])
+    tabs: list[tuple[str, str]] = []
+    tab = first
+    while True:
+        end = _indented_lines(lines, index, indent + BLOCK_INDENT)
+        body = "\n".join(line[indent + BLOCK_INDENT :] for line in lines[index:end])
+        tabs.append((tab["label"], _convert_blocks(body.rstrip(), extras).strip()))
+        following = _TAB_PATTERN.match(lines[end]) if end < len(lines) else None
+        if following is None or len(following["indent"]) != indent:
+            break
+        tab = following
+        index = end + 1
+    kept += ["", first["indent"] + extras.mark(_tabs_html(tabs, extras)), ""]
+    return end
+
+
+def _tab_set_class(panels: list[str], extras: _Extras) -> str:
+    """Return the class of a set of `panels`: a card, a switch for cards, or plain."""
+    if all(panel and not _CODE_HTML_PATTERN.sub("", panel).strip() for panel in panels):
+        return CODE_CARD_CLASS
+    opening = f'<div class="{CODE_CARD_CLASS}">'
+    cards = (
+        extras.blocks.get(_PARAGRAPH_WRAPPER_PATTERN.sub("", panel), "")
+        for panel in panels
+    )
+    return (
+        CARD_SWITCH_CLASS
+        if all(card.startswith(opening) for card in cards)
+        else TAB_SET_CLASS
+    )
+
+
+def _tabs_html(tabs: list[tuple[str, str]], extras: _Extras) -> str:
+    extras.tab_set_count += 1
+    group = f"__tabbed_{extras.tab_set_count}"
+    items = []
+    for number, (label, panel) in enumerate(tabs, start=1):
+        tab_id = f"{group}_{number}"
+        checked = " checked" if number == 1 else ""
+        label_html = _PARAGRAPH_WRAPPER_PATTERN.sub("", _parse(label).strip())
+        items.append(
+            f'<input type="radio" name="{group}" id="{tab_id}"{checked}>\n'
+            f'<label for="{tab_id}">{label_html}</label>\n'
+            f'<div class="tabbed-block">\n{panel}\n</div>'
+        )
+    set_class = _tab_set_class([panel for _, panel in tabs], extras)
+    body = "\n".join(items)
+    return f'<div class="{set_class}">\n{body}\n</div>'
 
 
 def _lift_footnote(

@@ -92,3 +92,61 @@ y = 2
     With a second paragraph.
 
 *[HTML]: HyperText Markup Language
+
+## Tabs
+
+=== "Syntax"
+
+    ```text
+    copy <source> <target>
+    ```
+
+=== "Example"
+
+    ```bash
+    copy notes.txt backup/notes.txt
+    ```
+
+Tabs of code alone make a card, and tabs holding cards switch between them.
+
+=== "Linux"
+
+    === "Syntax"
+
+        ```text
+        stat -c %s <file>
+        ```
+
+    === "Example"
+
+        ```bash
+        stat -c %s notes.txt
+        ```
+
+=== "macOS"
+
+    === "Syntax"
+
+        ```text
+        stat -f %z <file>
+        ```
+
+    === "Example"
+
+        ```bash
+        stat -f %z notes.txt
+        ```
+
+Any other tabs keep a plain bar.
+
+=== "Python"
+
+    Read the file with `pathlib`:
+
+    ```python
+    Path("notes.txt").read_text()
+    ```
+
+=== "Shell"
+
+    Read the file with `cat`.
