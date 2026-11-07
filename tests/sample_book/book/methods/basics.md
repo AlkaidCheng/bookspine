@@ -93,6 +93,10 @@ y = 2
 
 *[HTML]: HyperText Markup Language
 
+??? tip "A collapsible box"
+
+    Closed until a reader opens it.
+
 ## Tabs
 
 === "Syntax"

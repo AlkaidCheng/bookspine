@@ -180,6 +180,16 @@ def test_a_book_keeps_its_own_search_words(project_dir: Path) -> None:
     assert "Type to search chapter and section text." in text
 
 
+def test_pages_carry_the_class_of_their_layout(
+    reference_site_dir: Path, project_dir: Path
+) -> None:
+    assert 'class="kind-chapter layout-reference"' in page_text(
+        reference_site_dir, "tools/find/"
+    )
+    book_site_dir = build_book(project_dir).site_dir
+    assert "layout-reference" not in page_text(book_site_dir)
+
+
 def test_inline_code_breaks_only_at_spaces(reference_site_dir: Path) -> None:
     text = page_text(reference_site_dir, "tools/find/")
     assert '<span class="tok">-type</span> <span class="tok">f</span>' in text

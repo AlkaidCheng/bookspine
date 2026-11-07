@@ -215,13 +215,14 @@ def test_a_book_can_turn_code_wrapping_off(project_dir: Path) -> None:
 
 def test_export_menus_are_on_by_default(site_dir: Path) -> None:
     assert '<script src="./static/export.js" defer></script>' in page_text(site_dir, "")
+    assert "data-export-menus" not in page_text(site_dir, "")
     assert (site_dir / "static" / "export.js").is_file()
 
 
 def test_a_book_can_turn_export_menus_off(project_dir: Path) -> None:
     add_to_config(project_dir, "\nexport_menus: false\n")
     site_dir = build_book(project_dir).site_dir
-    assert "export.js" not in page_text(site_dir, "methods")
+    assert 'data-export-menus="false"' in page_text(site_dir, "methods")
 
 
 def test_source_and_edit_links_follow_the_config(site_dir: Path) -> None:

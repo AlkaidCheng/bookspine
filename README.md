@@ -251,6 +251,7 @@ becomes a topic that lists its pages.
 | The home page | Shows the contents before its text. |
 | Previous and next links | Go. |
 | Inline code | Breaks only at its spaces, so a token like `:<line>` stays whole. |
+| Running text | Is not hyphenated, and a box's title keeps its case. |
 
 A search result names the topic and the page.
 
@@ -298,7 +299,7 @@ prints on its default paper.
 | `search_scope` | `book`, or `site` in the reference layout | What the search box offers to search, as in "Search the book". |
 | `search_hint` | `Type to search chapter and section text.`, or `Type what you are looking for.` in the reference layout | The line under the search box. |
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
-| `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). |
+| `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). When it is `false`, a code block keeps its copy button, which stays faintly visible on a touch screen. |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
 | `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
