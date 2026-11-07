@@ -404,3 +404,9 @@ def test_search_names_a_section_page_by_its_number() -> None:
 def test_search_text_is_cut_to_its_limit() -> None:
     page = make_page("<p>" + "word " * SEARCH_TEXT_LIMIT + "</p>")
     assert len(search_entries(page)[0]["text"]) == SEARCH_TEXT_LIMIT
+
+
+def test_search_keeps_a_tabs_text_and_leaves_out_its_label() -> None:
+    page = make_page(convert_markdown('=== "Syntax"\n\n    The panel.\n'))
+    text = search_entries(page)[0]["text"]
+    assert text == "The panel."

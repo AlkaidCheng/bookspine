@@ -145,6 +145,32 @@ which any of these options may follow:
 Inline code takes a language's colours when it starts with `#!` and the language's name,
 as in `` `#!python x = 1` ``.
 
+### Tabs
+
+`=== "Label"` starts a tab, and the lines indented by four spaces under it are its
+content, which can be anything a page holds. Tabs in a row make one set, and any other
+line ends it.
+
+````markdown
+=== "Syntax"
+
+    ```text
+    copy <source> <target>
+    ```
+
+=== "Example"
+
+    ```bash
+    copy notes.txt backup/notes.txt
+    ```
+````
+
+Choosing a tab switches every set on the page with a tab of that label, and later pages
+open the same way. A set whose tabs hold only code blocks is drawn as one card with the
+labels in its title row. Tabs that each hold such a card, one set inside another, put
+their labels at the right of that row, which suits the same command on two platforms.
+The search leaves out the labels and keeps the text of every tab.
+
 ### Equations
 
 Write inline math as `$…$` or `\(…\)`, and display math as `$$ … $$` on lines of their

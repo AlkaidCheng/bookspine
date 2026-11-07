@@ -35,6 +35,7 @@ _LINK_PATTERN = re.compile(
     r'(href|src)="([^"#]*?\.(?:md|svg|png|jpe?g|gif|pdf|webp))(#[^"]*)?"'
 )
 _TAG_PATTERN = re.compile(r"<[^>]+>")
+_TAB_LABEL_PATTERN = re.compile(r'<label for="__tabbed_.*?</label>', re.S)
 _EXTERNAL_LINK_PATTERN = re.compile(
     r'<a href="(https?://[^"]+)" class="external" rel="noopener">([^<\s]+)</a>'
 )
@@ -371,7 +372,8 @@ def split_code_lines(page: Page) -> None:
 
 def search_entries(page: Page) -> list[dict[str, str]]:
     """Return one entry per H2 section, with plain text for the client-side index."""
-    chunks = re.split(r'(?=<h2 id=")', page.body_html)
+    # A tab's label names a view of the text and would match every search for it.
+    chunks = re.split(r'(?=<h2 id=")', _TAB_LABEL_PATTERN.sub("", page.body_html))
     entries = []
     for chunk in chunks:
         heading = re.match(r'<h2 id="([^"]+)">(.*?)</h2>', chunk, re.S)

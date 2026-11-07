@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add tabs, written `=== "Label"`, to `convert_markdown`, with choices that `book.js` carries across sets and pages (#20).
+
 ## 0.1.0
 
 - Add the `bookspine build` command, which turns a project's `book.yaml` and `book/` into a static site (#1).

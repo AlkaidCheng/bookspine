@@ -52,6 +52,47 @@
     headings.forEach(function (h) { observer.observe(h); });
   }
 
+  /* ------------------------------------------------------------ linked tabs */
+
+  /* Choosing a tab switches every set on the page with a tab of that label, and the next
+     page opens the same way: the stored list holds labels in the order they were chosen,
+     so replaying it leaves the latest choice in force for each set. */
+  var TABS_KEY = "tabs";
+  var TABS_KEPT = 10;
+  var tabInputs = Array.prototype.slice.call(document.querySelectorAll(".tabbed-set > input"));
+
+  function tabLabel(input) { return input.nextElementSibling.textContent.trim(); }
+
+  function selectTabs(text) {
+    tabInputs.forEach(function (input) {
+      if (tabLabel(input) === text) input.checked = true;
+    });
+  }
+
+  function chosenTabs() {
+    var chosen = null;
+    try { chosen = JSON.parse(localStorage.getItem(TABS_KEY)); } catch (e) {}
+    return Array.isArray(chosen) ? chosen : [];
+  }
+
+  if (tabInputs.length) chosenTabs().forEach(selectTabs);
+
+  tabInputs.forEach(function (input) {
+    input.addEventListener("change", function () {
+      var text = tabLabel(input);
+      var label = input.nextElementSibling;
+      /* Sets above this one may change height, so the page moves by what the label
+         moved, which keeps it under the pointer. */
+      var top = label.getBoundingClientRect().top;
+      selectTabs(text);
+      var shift = label.getBoundingClientRect().top - top;
+      if (Math.abs(shift) >= 1) window.scrollBy(0, shift);
+      var chosen = chosenTabs().filter(function (other) { return other !== text; });
+      chosen.push(text);
+      try { localStorage.setItem(TABS_KEY, JSON.stringify(chosen.slice(-TABS_KEPT))); } catch (e) {}
+    });
+  });
+
   /* ---------------------------------------------- equation links on arrival */
 
   /* An equation's anchor exists only once MathJax has typeset the page. */
