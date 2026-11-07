@@ -4,6 +4,9 @@
 
 - Add tabs, written `=== "Label"`, to `convert_markdown`, with choices that `book.js` carries across sets and pages (#20).
 - Add the `layout` key, whose `reference` value leaves a site unnumbered, with the `search_scope` and `search_hint` keys and an `icon` for each part (#21).
+- Style `??? kind` boxes as boxes, and label and number them in `number_boxes` in reading order with the rest (#22).
+- Keep a code block's copy button when `export_menus` is false (#22).
+- Show `.boxtitle` text as written and stop hyphenating running text in the reference layout, where commands must read as typed (#22).
 
 ## 0.1.0
 

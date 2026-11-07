@@ -250,7 +250,8 @@ class BookConfig:
     enlarge_tables : bool
         Whether a table has a button that opens it enlarged, as a figure does.
     export_menus : bool
-        Whether tables, figures, code blocks and equations offer an export menu.
+        Whether tables, figures, code blocks and equations offer an export menu. A code
+        block keeps its copy button either way.
     glossary : bool
         Whether ``\\glossary`` tags make glossary pages.
     wrap_code : bool

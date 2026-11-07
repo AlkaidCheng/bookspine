@@ -29,9 +29,10 @@ _TABLE_CAPTION_PATTERN = re.compile(
 _IMG_ALT_PATTERN = re.compile(r'alt="([^"]*)"')
 _IMG_SRC_PATTERN = re.compile(r'src="([^"]+)"')
 _XML_DECLARATION_PATTERN = re.compile(r"<\?xml[^>]*\?>\s*")
+# One pattern, so that open and collapsible boxes share a count in reading order.
 _BOX_PATTERN = re.compile(
-    r'<div class="admonition ([\w-]+)( [\w -]+)?">\s*'
-    r'<p class="admonition-title">(.*?)</p>',
+    r'<(?:div class="admonition |details class=")([\w-]+)( [\w -]+)?"( open="open")?>\s*'
+    r'<(?:p class="admonition-title"|summary)>(.*?)</(?:p|summary)>',
     re.S,
 )
 _CITE_PATTERN = re.compile(r"\[@([^\]]+)\]")
@@ -177,30 +178,33 @@ def number_boxes(page: Page) -> None:
     counters = page.counters
     label = f"{page.chapter_number}." if page.chapter_number else ""
 
-    def replace(match: re.Match[str]) -> str:
-        kind, extra, title = match.group(1), match.group(2) or "", match.group(3)
+    def head_of(kind: str, title: str) -> tuple[str, str]:
+        """Return a box's heading and its id, which only a numbered box has."""
         name = NUMBERED_BOXES.get(kind)
         if name is None:
             plain = LABELLED_BOXES.get(kind)
             if plain is None:
-                return match.group(0)
+                return title, ""
             head = f'<span class="boxlabel">{plain}</span>'
             if title and title.lower() != plain.lower():
                 head += f' <span class="boxtitle">{title}</span>'
-            return (
-                f'<div class="admonition {kind}{extra}">\n'
-                f'<p class="admonition-title">{head}</p>'
-            )
+            return head, ""
         counters[kind] = counters.get(kind, 0) + 1
         box_id = f"{kind}-{label}{counters[kind]}".replace(".", "-")
         head = f'<span class="boxlabel">{name} {label}{counters[kind]}</span>'
         if title and title != kind.capitalize():
             head += f' <span class="boxtitle">{title}</span>'
-        head += anchor_link(box_id)
-        return (
-            f'<div class="admonition {kind}{extra}" id="{box_id}">\n'
-            f'<p class="admonition-title">{head}</p>'
-        )
+        return head + anchor_link(box_id), box_id
+
+    def replace(match: re.Match[str]) -> str:
+        kind, extra, is_open, title = match.groups(default="")
+        head, box_id = head_of(kind, title)
+        attributes = f'class="admonition {kind}{extra}"{is_open}'
+        if box_id:
+            attributes += f' id="{box_id}"'
+        if match.group(0).startswith("<details"):
+            return f"<details {attributes}>\n<summary>{head}</summary>"
+        return f'<div {attributes}>\n<p class="admonition-title">{head}</p>'
 
     page.body_html = _BOX_PATTERN.sub(replace, page.body_html)
 

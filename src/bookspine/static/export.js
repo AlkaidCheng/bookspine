@@ -845,7 +845,7 @@
       };
       var tools = makeCorner(component, "right", element, "0.4rem");
       tools.appendChild(makeCopyToggle(element));
-      tools.appendChild(makeToggle(component, "code"));
+      if (hasMenus) tools.appendChild(makeToggle(component, "code"));
       element.addEventListener("click", function () { component.host.classList.toggle("tool-tapped"); });
     });
   }
@@ -864,7 +864,10 @@
     });
   }
 
-  addFigureToggles();
+  /* A book without export menus keeps the code blocks' copy button. */
+  var hasMenus = document.body.getAttribute("data-export-menus") !== "false";
+
+  if (hasMenus) addFigureToggles();
   addCodeToggles();
-  addEquationToggles();
+  if (hasMenus) addEquationToggles();
 })();

@@ -469,3 +469,43 @@ def test_search_names_an_unnumbered_page_by_its_part() -> None:
 def test_search_names_an_unnumbered_page_outside_a_part_by_its_title() -> None:
     page = make_page("<p>Text</p>", kind="help", number="", title="Help")
     assert search_entries(page)[0]["page"] == "Help"
+
+
+def test_a_collapsible_box_takes_its_label_and_the_box_class() -> None:
+    page = make_page(convert_markdown('??? tip "Move lines"\n\n    Text.\n'))
+    number_boxes(page)
+    assert '<details class="admonition tip">' in page.body_html
+    assert (
+        '<summary><span class="boxlabel">Tip</span> '
+        '<span class="boxtitle">Move lines</span></summary>'
+    ) in page.body_html
+
+
+def test_a_collapsible_box_stays_open_when_it_starts_open() -> None:
+    page = make_page(convert_markdown('???+ note "More"\n\n    Text.\n'))
+    number_boxes(page)
+    assert '<details class="admonition note" open="open">' in page.body_html
+
+
+def test_open_and_collapsible_boxes_share_a_count_in_reading_order() -> None:
+    page = make_page(
+        convert_markdown(
+            '!!! definition "First"\n    A.\n\n'
+            '??? definition "Second"\n    B.\n\n'
+            '!!! definition "Third"\n    C.\n'
+        )
+    )
+    number_boxes(page)
+    numbers = re.findall(r'boxlabel">Definition (3\.\d)<', page.body_html)
+    assert numbers == ["3.1", "3.2", "3.3"]
+    assert (
+        '<details class="admonition definition" id="definition-3-2">' in page.body_html
+    )
+
+
+def test_a_collapsible_box_of_another_kind_keeps_its_title() -> None:
+    page = make_page(convert_markdown('??? summary "In short"\n\n    Text.\n'))
+    number_boxes(page)
+    assert '<details class="admonition summary">\n<summary>In short</summary>' in (
+        page.body_html
+    )
