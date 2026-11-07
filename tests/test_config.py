@@ -216,3 +216,13 @@ def test_a_book_can_word_its_own_search(tmp_path: Path) -> None:
 def test_an_unknown_layout_stops_the_build(tmp_path: Path) -> None:
     with pytest.raises(BuildError, match="layout must be one of book, reference"):
         load_config(config_path_with(tmp_path, layout="magazine"))
+
+
+@pytest.mark.parametrize("key", ["not_found_page", "sitemap"])
+def test_a_site_file_needs_the_published_address(tmp_path: Path, key: str) -> None:
+    with pytest.raises(BuildError, match=f"{key} needs a url"):
+        load_config(config_path_with(tmp_path, **{key: True}))
+    config = load_config(
+        config_path_with(tmp_path, url="https://a.org/", **{key: True})
+    )
+    assert getattr(config, key)

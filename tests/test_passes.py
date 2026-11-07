@@ -13,6 +13,7 @@ from bookspine.errors import BuildError
 from bookspine.pages import Page
 from bookspine.passes import (
     break_bare_urls,
+    check_anchors,
     keep_code_tokens,
     mark_external_links,
     number_boxes,
@@ -229,12 +230,52 @@ def test_a_missing_asset_fails(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "link", ['<a href="https://example.org/a.md">x</a>', '<a href="/a.md">x</a>']
+    "link",
+    [
+        '<a href="https://example.org/a.md">x</a>',
+        '<a href="//example.org/a.md">x</a>',
+        '<a href="mailto:a@example.org">x</a>',
+        '<img src="data:image/png;base64,AAAA">',
+        '<a href="#here">x</a>',
+    ],
 )
-def test_absolute_links_are_left_alone(tmp_path: Path, link: str) -> None:
+def test_links_that_leave_the_pages_alone_are_left_alone(
+    tmp_path: Path, link: str
+) -> None:
     page = make_page(link)
-    rewrite_links(page, {}, set(), tmp_path)
+    assert rewrite_links(page, {}, set(), tmp_path) == []
     assert page.body_html == link
+
+
+def test_a_link_from_the_sites_root_fails(tmp_path: Path) -> None:
+    page = make_page('<a href="/a.md">x</a>')
+    with pytest.raises(BuildError, match="absolute link, use a relative one: /a.md"):
+        rewrite_links(page, {}, set(), tmp_path)
+
+
+def test_a_link_to_an_anchor_is_kept_for_checking(tmp_path: Path) -> None:
+    target = make_page(source_path=Path("part/other.md"), url="part/other/")
+    page = make_page('<a href="other.md#there">x</a>')
+    links = rewrite_links(page, {target.source_path: target}, set(), tmp_path)
+    assert links == [(page, target, "there")]
+    assert page.body_html == '<a href="../../part/other/#there">x</a>'
+
+
+def test_an_anchor_on_the_page_it_is_linked_from_passes() -> None:
+    page = make_page()
+    check_anchors({page: '<h2 id="a"></h2><a href="#a">x</a>'}, [])
+
+
+def test_an_anchor_missing_from_a_page_fails() -> None:
+    page = make_page()
+    target = make_page(source_path=Path("other.md"))
+    with pytest.raises(BuildError, match="no anchor #a in other.md"):
+        check_anchors({page: "", target: "<p>Text</p>"}, [(page, target, "a")])
+
+
+def test_an_equation_anchor_is_left_to_the_browser() -> None:
+    page = make_page()
+    check_anchors({page: '<a href="#mjx-eqn:one">x</a>'}, [])
 
 
 def test_external_links_are_marked() -> None:

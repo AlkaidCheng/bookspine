@@ -9,6 +9,7 @@ import html
 import re
 from dataclasses import dataclass
 
+from bookspine.config import EQUATION_ANCHOR_PREFIX
 from bookspine.errors import BuildError
 from bookspine.pages import GlossaryEntry, Page
 from bookspine.passes import CODE_SEGMENT_PATTERN
@@ -159,7 +160,7 @@ def equation_rows(tex: str) -> list[EquationRow]:
 
 def equation_anchor(label: str) -> str:
     """Return the id MathJax gives the equation carrying `label`."""
-    return "mjx-eqn:" + re.sub(r"\s", "_", label)
+    return EQUATION_ANCHOR_PREFIX + re.sub(r"\s", "_", label)
 
 
 def needs_mathjax(page_body: str) -> bool:

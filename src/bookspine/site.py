@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 import jinja2
 from pygments.formatters import HtmlFormatter
@@ -15,7 +16,10 @@ from pygments.util import ClassNotFound
 
 from bookspine.config import (
     BUILD_DATE_FORMAT,
+    CONFIG_NAME,
     REFERENCE_TEMPLATES_DIR_NAME,
+    SITEMAP_NAME,
+    SITEMAP_NAMESPACE,
     STATIC_DIR_NAME,
     TEMPLATES_DIR_NAME,
     BookConfig,
@@ -31,9 +35,10 @@ from bookspine.equations import (
 )
 from bookspine.errors import BuildError
 from bookspine.glossary import collect_terms, make_glossary_pages
-from bookspine.pages import Page, load_pages
+from bookspine.pages import Page, load_pages, make_not_found_page
 from bookspine.passes import (
     break_bare_urls,
+    check_anchors,
     mark_external_links,
     number_boxes,
     number_figures_and_tables,
@@ -99,6 +104,8 @@ class ConvertedPages:
     ----------
     assets : set of Path
         The local files the pages link to, relative to ``book/``.
+    anchor_links : list of tuple
+        The links to another page's anchor, as :func:`rewrite_links` returns them.
     search_index : list of dict
         The entries of the client-side search index.
     warnings : list of str
@@ -106,6 +113,7 @@ class ConvertedPages:
     """
 
     assets: set[Path] = field(default_factory=set)
+    anchor_links: list[tuple[Page, Page, str]] = field(default_factory=list)
     search_index: list[dict[str, str]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -175,7 +183,7 @@ def convert_pages(
     """
     pages_by_source = {page.source_path: page for page in pages}
     equation_labels: dict[str, tuple[Page, str]] = {}
-    converted = ConvertedPages()
+    converted = ConvertedPages(warnings=unlisted_page_warnings(pages, book_dir))
     for page in pages:
         page.body_html = convert_markdown(page.body_md)
         number_headings(page)
@@ -184,7 +192,9 @@ def convert_pages(
         number_equations(page, equation_labels)
         collect_terms(page)
         converted.warnings += resolve_citations(page)
-        rewrite_links(page, pages_by_source, converted.assets, book_dir)
+        converted.anchor_links += rewrite_links(
+            page, pages_by_source, converted.assets, book_dir
+        )
         mark_external_links(page)
         converted.search_index += search_entries(page)
         # After the search text, which would otherwise split at every <wbr>.
@@ -206,6 +216,16 @@ def convert_pages(
     for page in pages:
         resolve_equation_refs(page, equation_labels)
     return converted
+
+
+def unlisted_page_warnings(pages: list[Page], book_dir: Path) -> list[str]:
+    """Return a warning naming the Markdown files `pages` leaves out, if there are any."""
+    listed = {page.source_path for page in pages}
+    sources = (path.relative_to(book_dir) for path in book_dir.rglob("*.md"))
+    unlisted = sorted(path.as_posix() for path in sources if path not in listed)
+    if not unlisted:
+        return []
+    return [f"pages missing from {CONFIG_NAME}: {', '.join(unlisted)}"]
 
 
 def build_date() -> dt.date:
@@ -279,8 +299,8 @@ def template_names(config: BookConfig, name: str) -> list[str]:
 
 def page_files(
     project: Project, config: BookConfig, pages: list[Page]
-) -> dict[str, bytes]:
-    """Return the HTML file of every page, by its name in the site.
+) -> dict[Page, str]:
+    """Return the HTML of every page, and of the page for a missing address if any.
 
     Raises
     ------
@@ -298,20 +318,33 @@ def page_files(
         mathjax_url=MATHJAX_URL,
     )
     parts = [page for page in pages if page.kind == "part"]
-    files = {}
-    for page in pages:
+    extra_pages = [make_not_found_page(config)] if config.not_found_page else []
+    page_html = {}
+    for page in [*pages, *extra_pages]:
         try:
             names = template_names(config, f"{page.kind}.html")
             template = environment.select_template(names)
-            page_html = template.render(page=page, parts=parts, load_mathjax=False)
+            text = template.render(page=page, parts=parts, load_mathjax=False)
             # Only the finished page shows all of its text: the sidebar prints headings
             # from other pages, and an override can print anything.
-            if needs_mathjax(page_html.partition("</head>")[2]):
-                page_html = template.render(page=page, parts=parts, load_mathjax=True)
+            if needs_mathjax(text.partition("</head>")[2]):
+                text = template.render(page=page, parts=parts, load_mathjax=True)
         except jinja2.TemplateError as error:
             raise BuildError(f"{page.source_path}: template error: {error}") from None
-        files[page.output_name] = page_html.encode("utf-8")
-    return files
+        page_html[page] = text
+    return page_html
+
+
+def sitemap_xml(config: BookConfig, pages: list[Page]) -> str:
+    """Return the sitemap of `pages`, whose addresses start from the book's ``url``."""
+    base_url = f"{config.url.rstrip('/')}/"
+    entries = "".join(
+        f"<url><loc>{escape(base_url + page.url)}</loc></url>" for page in pages
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<urlset xmlns="{SITEMAP_NAMESPACE}">{entries}</urlset>\n'
+    )
 
 
 def pygments_css(config: BookConfig) -> str:
@@ -371,14 +404,24 @@ def site_files(
     pages: list[Page],
     converted: ConvertedPages,
 ) -> dict[str, bytes]:
-    """Return every file of the site, by its POSIX path in the site directory."""
-    files = page_files(project, config, pages)
+    """Return every file of the site, by its POSIX path in the site directory.
+
+    Raises
+    ------
+    BuildError
+        If a template fails, or a link names an anchor its page does not have.
+    """
+    page_html = page_files(project, config, pages)
+    check_anchors(page_html, converted.anchor_links)
+    files = {page.output_name: text.encode("utf-8") for page, text in page_html.items()}
     for asset in sorted(converted.assets):
         files[asset.as_posix()] = (project.book_dir / asset).read_bytes()
     files.update(static_files(project, config))
     search_index = json.dumps(converted.search_index, ensure_ascii=False)
     files[SEARCH_INDEX_NAME] = search_index.encode("utf-8")
     files[NOJEKYLL_NAME] = b""
+    if config.sitemap:
+        files[SITEMAP_NAME] = sitemap_xml(config, pages).encode("utf-8")
     return files
 
 

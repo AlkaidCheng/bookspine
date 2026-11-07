@@ -95,6 +95,19 @@ GLOSSARY_EQUATIONS_NOUN = "equation"
 GLOSSARY_EQUATIONS_SUMMARY = "{count} named in this book."
 GLOSSARY_EQUATIONS_URL = "glossary/equations/"
 
+# What the anchors MathJax makes in the browser start with.
+EQUATION_ANCHOR_PREFIX = "mjx-eqn:"
+
+# The page served for a missing address, under the name GitHub Pages and most other
+# hosts look for: https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site
+NOT_FOUND_KIND = "404"
+NOT_FOUND_NAME = "404.html"
+NOT_FOUND_TITLE = "Page not found"
+
+# The sitemap's name and format: https://www.sitemaps.org/protocol.html
+SITEMAP_NAME = "sitemap.xml"
+SITEMAP_NAMESPACE = "http://www.sitemaps.org/schemas/sitemap/0.9"
+
 # How the title page and footer print the date, in the notation of
 # https://docs.python.org/3/library/datetime.html#format-codes
 BUILD_DATE_FORMAT = "%B %Y"
@@ -119,7 +132,14 @@ _TEXT_KEYS = (
 # The C parser, which is much faster, where PyYAML was built with it.
 _FAST_YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
-_SWITCH_KEYS = ("enlarge_tables", "export_menus", "glossary", "wrap_code")
+_SWITCH_KEYS = (
+    "enlarge_tables",
+    "export_menus",
+    "glossary",
+    "not_found_page",
+    "sitemap",
+    "wrap_code",
+)
 _REQUIRED_KEYS = ("title", "author")
 _PART_KEYS = {"dir", "title", "chapters"}
 _CHAPTER_KEYS = {"dir", "sections"}
@@ -254,6 +274,10 @@ class BookConfig:
         block keeps its copy button either way.
     glossary : bool
         Whether ``\\glossary`` tags make glossary pages.
+    not_found_page : bool
+        Whether the site has a ``404.html``. Needs `url`.
+    sitemap : bool
+        Whether the site has a ``sitemap.xml``. Needs `url`.
     wrap_code : bool
         Whether a long line of code wraps instead of scrolling.
     mathjax_macros : Mapping[str, Any]
@@ -278,6 +302,8 @@ class BookConfig:
     enlarge_tables: bool = True
     export_menus: bool = True
     glossary: bool = True
+    not_found_page: bool = False
+    sitemap: bool = False
     wrap_code: bool = True
     mathjax_macros: Mapping[str, Any] = field(default_factory=dict)
     pygments_light: str = DEFAULT_PYGMENTS_LIGHT
@@ -355,6 +381,9 @@ def _config_from_record(record: Any) -> BookConfig:
             if not isinstance(record[key], bool):
                 raise BuildError(f"{CONFIG_NAME}: {key} must be true or false")
             values[key] = record[key]
+    for key in ("not_found_page", "sitemap"):
+        if values.get(key) and not values.get("url"):
+            raise BuildError(f"{CONFIG_NAME}: {key} needs a url")
     if "mathjax_macros" in record:
         values["mathjax_macros"] = _checked_macros(record["mathjax_macros"])
     return BookConfig(**values)
