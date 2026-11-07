@@ -20,6 +20,12 @@ PACKAGE_TEMPLATES = [
     "help.html",
     "home.html",
     "part.html",
+    "reference/base.html",
+    "reference/chapter.html",
+    "reference/home.html",
+    "reference/page_list.html",
+    "reference/part.html",
+    "reference/section.html",
     "section.html",
 ]
 PACKAGE_STATIC = ["book.css", "book.js", "export.js", "favicon.svg"]

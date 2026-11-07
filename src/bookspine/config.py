@@ -24,7 +24,23 @@ THEME_DIR_NAME = "theme"
 SITE_DIR_NAME = "site"
 TEMPLATES_DIR_NAME = "templates"
 STATIC_DIR_NAME = "static"
+ICONS_DIR_NAME = "icons"
 OPENER_NAME = "index.md"
+
+# The layouts. A book numbers its parts, chapters and sections. A reference site leaves
+# them unnumbered, for readers who look a page up instead of reading in order.
+BOOK_LAYOUT = "book"
+REFERENCE_LAYOUT = "reference"
+LAYOUTS = (BOOK_LAYOUT, REFERENCE_LAYOUT)
+
+# The reference layout's own templates, where it has them, under this directory.
+REFERENCE_TEMPLATES_DIR_NAME = "reference"
+
+# What the search box says in each layout.
+DEFAULT_SEARCH_SCOPE = "book"
+DEFAULT_SEARCH_HINT = "Type to search chapter and section text."
+REFERENCE_SEARCH_SCOPE = "site"
+REFERENCE_SEARCH_HINT = "Type what you are looking for."
 
 # Code colours, from the styles listed at https://pygments.org/styles/
 DEFAULT_PYGMENTS_LIGHT = "friendly"
@@ -63,6 +79,9 @@ UNNUMBERED_HEADINGS = {"references", "further reading"}
 # The characters of a section's text kept in the search index.
 SEARCH_TEXT_LIMIT = 1200
 
+# Between a topic and its page in a search result of the reference layout.
+SEARCH_CRUMB_SEPARATOR = " › "
+
 # The generated glossary: an opener, as a part has, and a page for each kind of entry.
 GLOSSARY_TITLE = "Glossary"
 GLOSSARY_SUMMARY = "Find where this book defines a term or states an equation."
@@ -91,6 +110,9 @@ _TEXT_KEYS = (
     "repo_host",
     "edit_url",
     "help_page",
+    "layout",
+    "search_scope",
+    "search_hint",
     "pygments_light",
     "pygments_dark",
 )
@@ -157,6 +179,10 @@ class Project:
     def static_dir(self) -> Path:
         return self.theme_dir / STATIC_DIR_NAME
 
+    @property
+    def icons_dir(self) -> Path:
+        return self.theme_dir / ICONS_DIR_NAME
+
 
 @dataclass(frozen=True)
 class ChapterConfig:
@@ -215,6 +241,12 @@ class BookConfig:
         The Markdown file in ``book/`` linked from the foot of the sidebar.
     parts : tuple of PartConfig
         The book's parts, in reading order.
+    layout : str
+        ``book`` for numbered pages, ``reference`` for unnumbered ones.
+    search_scope : str
+        What the search box offers to search, as in "Search the book".
+    search_hint : str
+        The line under the search box.
     enlarge_tables : bool
         Whether a table has a button that opens it enlarged, as a figure does.
     export_menus : bool
@@ -239,6 +271,9 @@ class BookConfig:
     edit_url: str = ""
     help_page: str = ""
     parts: tuple[PartConfig, ...] = ()
+    layout: str = BOOK_LAYOUT
+    search_scope: str = DEFAULT_SEARCH_SCOPE
+    search_hint: str = DEFAULT_SEARCH_HINT
     enlarge_tables: bool = True
     export_menus: bool = True
     glossary: bool = True
@@ -246,6 +281,10 @@ class BookConfig:
     mathjax_macros: Mapping[str, Any] = field(default_factory=dict)
     pygments_light: str = DEFAULT_PYGMENTS_LIGHT
     pygments_dark: str = DEFAULT_PYGMENTS_DARK
+
+    @property
+    def is_reference(self) -> bool:
+        return self.layout == REFERENCE_LAYOUT
 
 
 def parse_yaml(text: str) -> Any:
@@ -303,6 +342,12 @@ def _config_from_record(record: Any) -> BookConfig:
     values = {key: record[key] for key in _TEXT_KEYS if key in record}
     if "help_page" in values:
         require_path_component(values["help_page"], what="The help_page")
+    layout = values.get("layout", BOOK_LAYOUT)
+    if layout not in LAYOUTS:
+        raise BuildError(f"{CONFIG_NAME}: layout must be one of {', '.join(LAYOUTS)}")
+    if layout == REFERENCE_LAYOUT:
+        values.setdefault("search_scope", REFERENCE_SEARCH_SCOPE)
+        values.setdefault("search_hint", REFERENCE_SEARCH_HINT)
     values["parts"] = _parts_from_record(record.get("parts"))
     for key in _SWITCH_KEYS:
         if key in record:

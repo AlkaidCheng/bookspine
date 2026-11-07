@@ -13,11 +13,13 @@ from bookspine.errors import BuildError
 from bookspine.pages import Page
 from bookspine.passes import (
     break_bare_urls,
+    keep_code_tokens,
     mark_external_links,
     number_boxes,
     number_figures_and_tables,
     number_headings,
     outside_code,
+    prepare_reference_page,
     resolve_citations,
     rewrite_links,
     search_entries,
@@ -410,3 +412,60 @@ def test_search_keeps_a_tabs_text_and_leaves_out_its_label() -> None:
     page = make_page(convert_markdown('=== "Syntax"\n\n    The panel.\n'))
     text = search_entries(page)[0]["text"]
     assert text == "The panel."
+
+
+def test_inline_code_keeps_each_word_whole() -> None:
+    assert keep_code_tokens("<p><code>:&lt;line&gt; two</code></p>") == (
+        '<p><code><span class="tok">:&lt;line&gt;</span> '
+        '<span class="tok">two</span></code></p>'
+    )
+
+
+def test_code_blocks_keep_their_text_as_it_is() -> None:
+    block = "<pre><code>a b</code></pre>"
+    assert keep_code_tokens(block) == block
+
+
+def test_coloured_inline_code_is_left_alone() -> None:
+    code = '<code class="highlight"><span class="n">a</span> b</code>'
+    assert keep_code_tokens(code) == code
+
+
+def test_the_first_paragraph_moves_to_the_lede() -> None:
+    page = make_page("<p>Scope with <code>x</code>.</p>\n<h2>Next</h2>", number="")
+    prepare_reference_page(page)
+    assert page.lede_html == 'Scope with <code><span class="tok">x</span></code>.'
+    assert page.body_html == "\n<h2>Next</h2>"
+
+
+def test_a_page_opening_with_a_heading_has_no_lede() -> None:
+    page = make_page('<h2 id="a">A</h2><p>Text</p>', number="")
+    prepare_reference_page(page)
+    assert page.lede_html == ""
+    assert "<p>Text</p>" in page.body_html
+
+
+@pytest.mark.parametrize("kind", ["home", "help"])
+def test_a_page_with_no_place_for_a_lede_keeps_its_paragraph(kind: str) -> None:
+    page = make_page("<p>Text</p>", kind=kind, number="")
+    prepare_reference_page(page)
+    assert page.body_html == "<p>Text</p>"
+
+
+def test_a_summary_reads_as_markdown() -> None:
+    page = make_page("", number="", meta={"summary": "Count with `find`."})
+    prepare_reference_page(page)
+    assert page.summary_html == (
+        'Count with <code><span class="tok">find</span></code>.'
+    )
+
+
+def test_search_names_an_unnumbered_page_by_its_part() -> None:
+    part = make_page("", kind="part", number="", title="Tools")
+    page = make_page("<p>Text</p>", number="", title="Finding", part=part)
+    assert search_entries(page)[0]["page"] == "Tools › Finding"
+
+
+def test_search_names_an_unnumbered_page_outside_a_part_by_its_title() -> None:
+    page = make_page("<p>Text</p>", kind="help", number="", title="Help")
+    assert search_entries(page)[0]["page"] == "Help"

@@ -9,12 +9,16 @@ from typing import Any
 from bookspine.config import (
     LABELLED_BOXES,
     NUMBERED_BOXES,
+    SEARCH_CRUMB_SEPARATOR,
     SEARCH_TEXT_LIMIT,
     UNNUMBERED_HEADINGS,
 )
 from bookspine.converter import convert_markdown
 from bookspine.errors import BuildError
 from bookspine.pages import Page
+
+# The pages whose head shows a lede in the reference layout.
+LEDE_KINDS = {"part", "chapter", "section"}
 
 CODE_SEGMENT_PATTERN = re.compile(r"(<pre.*?</pre>|<code.*?</code>)", re.S)
 _HEADING_PATTERN = re.compile(r'<h([23]) id="([^"]+)">(.*?)</h\1>', re.S)
@@ -45,6 +49,10 @@ _CODE_BLOCK_PATTERN = re.compile(
     re.S,
 )
 _CODE_LINE_PATTERN = re.compile(r".*\n|.+")
+_PRE_PATTERN = re.compile(r"(<pre.*?</pre>)", re.S)
+_PLAIN_CODE_PATTERN = re.compile(r"<code>([^<]*)</code>")
+_LEDE_PATTERN = re.compile(r"\A\s*<p>(.*?)</p>", re.S)
+_PARAGRAPH_WRAPPER_PATTERN = re.compile(r"^<p>|</p>$")
 _URL_SCHEME_PATTERN = re.compile(r"https?://")
 # After a colon, a double slash, an equals sign or an ampersand, and before a single
 # slash or other punctuation, as The Chicago Manual of Style has it in 7.46, "Dividing
@@ -61,6 +69,11 @@ def outside_code(text: str, transform: Callable[[str], str]) -> str:
         segment if index % 2 else transform(segment)
         for index, segment in enumerate(segments)
     )
+
+
+def inline_html(markdown: str) -> str:
+    """Return the HTML of the one-paragraph `markdown`, without its paragraph tags."""
+    return _PARAGRAPH_WRAPPER_PATTERN.sub("", convert_markdown(markdown).strip())
 
 
 def anchor_link(anchor: str) -> str:
@@ -238,9 +251,7 @@ def resolve_citations(page: Page) -> list[str]:
     if order:
         items = []
         for key in order:
-            text = convert_markdown(str(references[key]))
-            text = re.sub(r"^<p>|</p>$", "", text.strip())
-            items.append(f'<li id="ref-{key}">{text}</li>')
+            items.append(f'<li id="ref-{key}">{inline_html(str(references[key]))}</li>')
         page.body_html += (
             '\n<section class="references"><h2 id="references" class="unnumbered">'
             "References</h2>"
@@ -370,6 +381,48 @@ def split_code_lines(page: Page) -> None:
     page.body_html = _CODE_BLOCK_PATTERN.sub(replace, page.body_html)
 
 
+def keep_code_tokens(text: str) -> str:
+    """Let the inline code in `text` wrap only at its spaces.
+
+    Each word goes in a ``.tok`` span, which ``book.css`` keeps on one line, so that a
+    token like ``:<line>`` stays whole. Code with colours and code blocks are left alone.
+    """
+
+    def tokens(match: re.Match[str]) -> str:
+        words = match.group(1).split(" ")
+        spans = (f'<span class="tok">{word}</span>' if word else word for word in words)
+        return f"<code>{' '.join(spans)}</code>"
+
+    segments = _PRE_PATTERN.split(text)
+    segments[::2] = [
+        _PLAIN_CODE_PATTERN.sub(tokens, segment) for segment in segments[::2]
+    ]
+    return "".join(segments)
+
+
+def prepare_reference_page(page: Page) -> None:
+    """Give `page` what the reference layout shows beyond its body.
+
+    The first paragraph moves from the body to ``lede_html``. This runs after the search
+    index is made, which keeps that paragraph's text.
+    """
+    if page.kind in LEDE_KINDS and (lede := _LEDE_PATTERN.match(page.body_html)):
+        page.lede_html = keep_code_tokens(lede.group(1))
+        page.body_html = page.body_html[lede.end() :]
+    page.body_html = keep_code_tokens(page.body_html)
+    page.summary_html = keep_code_tokens(inline_html(page.summary))
+
+
+def _search_crumb(page: Page) -> str:
+    """Return what a search result calls `page`: by number, or else by its part."""
+    if page.number:
+        prefix = {"chapter": f"{page.number}. ", "section": f"{page.number} "}
+        return prefix.get(page.kind, "") + page.title
+    if page.part:
+        return f"{page.part.title}{SEARCH_CRUMB_SEPARATOR}{page.title}"
+    return page.title
+
+
 def search_entries(page: Page) -> list[dict[str, str]]:
     """Return one entry per H2 section, with plain text for the client-side index."""
     # A tab's label names a view of the text and would match every search for it.
@@ -388,11 +441,10 @@ def search_entries(page: Page) -> list[dict[str, str]]:
             text = text[len(section) :].strip() if text.startswith(section) else text
         else:
             section, anchor = "", ""
-        prefix = {"chapter": f"{page.number}. ", "section": f"{page.number} "}
         entries.append(
             {
                 "url": page.url + anchor,
-                "page": prefix.get(page.kind, "") + page.title,
+                "page": _search_crumb(page),
                 "section": section,
                 "text": text[:SEARCH_TEXT_LIMIT],
             }

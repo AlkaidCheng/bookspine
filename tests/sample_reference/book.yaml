@@ -1,0 +1,16 @@
+title: Sample Reference
+subtitle: Commands to look up
+kicker: Quick reference
+author: A. Author
+url: https://example.org/reference/
+layout: reference
+help_page: help.md
+parts:
+  - dir: tools
+    chapters:
+      - find.md
+      - plain.md
+      - dir: deep
+        sections:
+          - first.md
+  - dir: notes

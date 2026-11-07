@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add tabs, written `=== "Label"`, to `convert_markdown`, with choices that `book.js` carries across sets and pages (#20).
+- Add the `layout` key, whose `reference` value leaves a site unnumbered, with the `search_scope` and `search_hint` keys and an `icon` for each part (#21).
 
 ## 0.1.0
 

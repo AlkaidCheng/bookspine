@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}{{ page.title }} · {{ book.title }}{% endblock %}</title>
-{% if page.summary %}<meta name="description" content="{{ page.summary }}">{% endif %}
+{% if page.summary %}<meta name="description" content="{{ page.description }}">{% endif %}
 <meta name="author" content="{{ book.author }}">
 <link rel="icon" href="{{ page.root }}static/favicon.svg" type="image/svg+xml">
 <script>
@@ -63,6 +63,7 @@ window.MathJax = {
   </button>
   <a class="brand" href="{{ page.root }}">{{ book.title }}</a>
   <div class="running-head">
+    {% block running_head %}
     {% if page.chapter_number %}
       <span class="rh-part">Part {{ page.part.number }} · {{ page.part.title }}</span>
       <span class="rh-sep">/</span>
@@ -72,9 +73,10 @@ window.MathJax = {
     {% elif page.kind == "glossary" %}
       <span class="rh-part">{{ glossary_page.title }}</span>
     {% endif %}
+    {% endblock %}
   </div>
   <div class="tools">
-    <button class="iconbtn search-open" type="button" aria-label="Search the book" title="Search (press /)">
+    <button class="iconbtn search-open" type="button" aria-label="Search the {{ book.search_scope }}" title="Search (press /)">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
     <button class="iconbtn theme-toggle" type="button" aria-label="Toggle colour scheme" title="Light / dark">
@@ -88,6 +90,7 @@ window.MathJax = {
   <nav class="sidebar" id="sidebar" aria-label="Book contents">
     <div class="sidebar-inner">
       <a class="toc-home{% if page.kind == 'home' %} active{% endif %}" href="{{ page.root }}">Contents</a>
+      {% block contents %}
       {% for part in parts %}
       <section class="toc-part{% if page == part or page.part == part %} current{% endif %}">
         <a class="toc-part-link{% if page == part %} active{% endif %}" href="{{ page.href(part) }}">
@@ -129,6 +132,7 @@ window.MathJax = {
         </ol>
       </section>
       {% endfor %}
+      {% endblock %}
       {% if glossary_page %}
       <section class="toc-part{% if page.kind == 'glossary' %} current{% endif %}">
         <a class="toc-part-link{% if page == glossary_page %} active{% endif %}" href="{{ page.href(glossary_page) }}">
@@ -158,6 +162,7 @@ window.MathJax = {
   <main class="content" id="content">
     {% block content %}{% endblock %}
 
+    {% block pagenav %}
     {% if page.prev or page.next %}
     <nav class="pagenav" aria-label="Previous and next">
       {% if page.prev %}
@@ -174,6 +179,7 @@ window.MathJax = {
       {% endif %}
     </nav>
     {% endif %}
+    {% endblock %}
 
     <footer class="colophon">
       <span>{{ book.title }} · {{ book.author }} · Revised {{ build_date }}</span>
@@ -187,11 +193,11 @@ window.MathJax = {
 <div class="search" hidden>
   <div class="search-panel" role="dialog" aria-modal="true" aria-label="Search">
     <div class="search-row">
-      <input class="search-input" type="search" placeholder="Search the book…" autocomplete="off" spellcheck="false">
+      <input class="search-input" type="search" placeholder="Search the {{ book.search_scope }}…" autocomplete="off" spellcheck="false">
       <button class="iconbtn search-close" type="button" aria-label="Close search">&#x2715;</button>
     </div>
     <ol class="search-results"></ol>
-    <p class="search-hint">Type to search chapter and section text. <kbd>Esc</kbd> closes.</p>
+    <p class="search-hint">{{ book.search_hint }} <kbd>Esc</kbd> closes.</p>
   </div>
 </div>
 

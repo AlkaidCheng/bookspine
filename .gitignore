@@ -2,6 +2,7 @@
 /dist/
 /site/
 /tests/sample_book/site/
+/tests/sample_reference/site/
 
 # ---- Rust ----------------------------------------------------------------
 # Dependencies float, so the crates have no lock file.
