@@ -16,9 +16,10 @@ file. A second layout leaves out the numbers, for a site that readers look thing
 | Theme | Puts each page into its template and gathers the static files. |
 | Write | Replaces what the last build wrote in `site/`. |
 
-The build stops on a broken internal link, a missing figure, a citation without a
-reference entry, an `\eqref` to a label no numbered equation carries, or an equation
-label used twice. A failed build leaves `site/` as it was.
+The build stops on a broken internal link or anchor, a link that starts at the site's
+root, a missing figure, a citation without a reference entry, an `\eqref` to a label no
+numbered equation carries, or an equation label used twice. A failed build leaves `site/`
+as it was.
 
 ## Install
 
@@ -65,7 +66,7 @@ bookspine build [PROJECT_DIR] [--site-dir DIR] [--allow-warnings]
 |---|---|
 | `PROJECT_DIR` | The directory holding `book.yaml`, by default the current one. |
 | `--site-dir DIR` | Where to write the site, by default `site/` in the project directory. |
-| `--allow-warnings` | Do not fail the build on warnings. A reference that is never cited is a warning. |
+| `--allow-warnings` | Do not fail the build on warnings. A reference that is never cited is a warning, and so is a Markdown file under `book/` that `book.yaml` does not list. |
 
 `python -m bookspine` runs the same command. Each build lists any files under `theme/`
 that are in force.
@@ -301,6 +302,8 @@ prints on its default paper.
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). When it is `false`, a code block keeps its copy button, which stays faintly visible on a touch screen. |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
+| `not_found_page` | `false` | Whether the site has a `404.html` for a missing address, with the sidebar and search. Needs `url`, because its links start from the site's path, so it shows without its styles on a local preview served from another path. |
+| `sitemap` | `false` | Whether the site has a `sitemap.xml` listing every page. Needs `url`. |
 | `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
 | `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
@@ -323,7 +326,7 @@ first.
 
 | Path | Effect |
 |---|---|
-| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter`, `section`, `glossary` and `help`. The reference layout's own are under `reference/`: `base`, `home`, `part`, `chapter`, `section` and `page_list`. |
+| `theme/templates/NAME.html` | Replaces the package's template of that name. The templates are `base`, `home`, `part`, `chapter`, `section`, `glossary`, `help` and `404`. The reference layout's own are under `reference/`: `base`, `home`, `part`, `chapter`, `section` and `page_list`. |
 | `theme/icons/NAME.svg` | An icon for a part in the [reference layout](#reference-layout). |
 | `theme/static/NAME` | Replaces the package's static file of that name, or adds a new one. A `pygments.css` here takes the place of the generated one. |
 

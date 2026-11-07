@@ -5,6 +5,7 @@ import os
 import re
 from importlib import resources
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -14,6 +15,7 @@ from bookspine.safe_paths import STAMP_NAME
 from bookspine.site import read_traversable
 
 PACKAGE_TEMPLATES = [
+    "404.html",
     "base.html",
     "chapter.html",
     "glossary.html",
@@ -431,3 +433,123 @@ def test_the_package_holds_its_templates_and_static_files() -> None:
     static = read_traversable(package_dir / "static", "static")
     assert sorted(templates) == [f"templates/{name}" for name in PACKAGE_TEMPLATES]
     assert sorted(static) == [f"static/{name}" for name in PACKAGE_STATIC]
+
+
+def test_a_site_has_no_404_page_or_sitemap_by_default(site_dir: Path) -> None:
+    assert not (site_dir / "404.html").exists()
+    assert not (site_dir / "sitemap.xml").exists()
+
+
+def test_the_404_page_links_from_the_sites_own_path(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nnot_found_page: true\n")
+    config_path = project_dir / "book.yaml"
+    config_text = config_path.read_text(encoding="utf-8")
+    config_path.write_text(
+        re.sub(r"(?m)^url:.*$", "url: https://example.org/my-book", config_text),
+        encoding="utf-8",
+    )
+    site_dir = build_book(project_dir).site_dir
+    text = (site_dir / "404.html").read_text(encoding="utf-8")
+    assert '<html lang="en" data-root="/my-book/">' in text
+    assert 'href="/my-book/static/book.css"' in text
+    assert 'href="/my-book/methods/"' in text
+    assert "Page not found" in text
+    assert "Edit this page" not in text
+
+
+def test_the_404_page_of_a_site_at_the_root_links_from_it(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nnot_found_page: true\n")
+    config_path = project_dir / "book.yaml"
+    config_text = config_path.read_text(encoding="utf-8")
+    config_path.write_text(
+        re.sub(r"(?m)^url:.*$", "url: https://example.org/", config_text),
+        encoding="utf-8",
+    )
+    text = (build_book(project_dir).site_dir / "404.html").read_text(encoding="utf-8")
+    assert 'data-root="/"' in text
+
+
+def test_the_sitemap_lists_every_page_from_the_url(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nsitemap: true\n")
+    result = build_book(project_dir)
+    text = (result.site_dir / "sitemap.xml").read_text(encoding="utf-8")
+    root = ElementTree.fromstring(text)
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    addresses = [element.text for element in root.iter(f"{namespace}loc")]
+    assert len(addresses) == len(set(addresses)) == result.page_count
+    assert all(str(address).startswith("https://") for address in addresses)
+    assert any(str(address).endswith("/methods/split/second/") for address in addresses)
+
+
+def test_a_rebuild_removes_the_404_page_and_sitemap(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nnot_found_page: true\nsitemap: true\n")
+    site_dir = build_book(project_dir).site_dir
+    assert (site_dir / "404.html").is_file()
+    config_path = project_dir / "book.yaml"
+    config_text = config_path.read_text(encoding="utf-8")
+    config_path.write_text(
+        config_text.replace("\nnot_found_page: true\nsitemap: true\n", "\n"),
+        encoding="utf-8",
+    )
+    build_book(project_dir)
+    assert not (site_dir / "404.html").exists()
+    assert not (site_dir / "sitemap.xml").exists()
+
+
+def add_to_page(project_dir: Path, text: str) -> None:
+    page_path = project_dir / "book/methods/basics.md"
+    page_path.write_text(page_path.read_text(encoding="utf-8") + text, encoding="utf-8")
+
+
+def missing_anchor_message(source: str) -> str:
+    """Return the pattern of the error, whose paths use the platform's separator."""
+    return re.escape(f"no anchor #nowhere in {Path(source)}")
+
+
+def test_a_link_to_a_missing_anchor_stops_the_build(project_dir: Path) -> None:
+    add_to_page(project_dir, "\n[Nowhere](split/index.md#nowhere)\n")
+    with pytest.raises(
+        BuildError, match=missing_anchor_message("methods/split/index.md")
+    ):
+        build_book(project_dir)
+
+
+def test_a_link_to_a_missing_anchor_on_its_page_stops_the_build(
+    project_dir: Path,
+) -> None:
+    add_to_page(project_dir, "\n[Nowhere](#nowhere)\n")
+    with pytest.raises(BuildError, match=missing_anchor_message("methods/basics.md")):
+        build_book(project_dir)
+
+
+@pytest.mark.parametrize("anchor", ["measures", "fig-1", "content"])
+def test_a_link_can_reach_any_anchor_of_a_finished_page(
+    project_dir: Path, anchor: str
+) -> None:
+    add_to_page(project_dir, f"\n[Here](#{anchor})\n")
+    build_book(project_dir)
+
+
+def test_an_absolute_link_stops_the_build(project_dir: Path) -> None:
+    add_to_page(project_dir, "\n[Root](/about/)\n")
+    with pytest.raises(BuildError, match="absolute link, use a relative one: /about/"):
+        build_book(project_dir)
+
+
+def test_a_link_to_any_local_file_copies_it(project_dir: Path) -> None:
+    (project_dir / "book/methods/data.csv").write_text("a,b\n", encoding="utf-8")
+    add_to_page(project_dir, "\n[Data](data.csv)\n")
+    site_dir = build_book(project_dir).site_dir
+    assert (site_dir / "methods/data.csv").is_file()
+
+
+def test_a_link_to_a_directory_stops_the_build(project_dir: Path) -> None:
+    add_to_page(project_dir, "\n[Directory](split/)\n")
+    with pytest.raises(BuildError, match="missing asset: split/"):
+        build_book(project_dir)
+
+
+def test_a_markdown_file_left_out_of_the_book_is_a_warning(project_dir: Path) -> None:
+    (project_dir / "book/methods/draft.md").write_text("Draft\n", encoding="utf-8")
+    warnings = build_book(project_dir).warnings
+    assert "pages missing from book.yaml: methods/draft.md" in warnings

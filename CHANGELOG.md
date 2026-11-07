@@ -7,6 +7,8 @@
 - Style `??? kind` boxes as boxes, and label and number them in `number_boxes` in reading order with the rest (#22).
 - Keep a code block's copy button when `export_menus` is false (#22).
 - Show `.boxtitle` text as written and stop hyphenating running text in the reference layout, where commands must read as typed (#22).
+- Add the `not_found_page` and `sitemap` keys, which write `404.html` and `sitemap.xml` (#23).
+- Stop the build on a link to a missing anchor or from the site's root, copy any local file a page links to, and warn about a Markdown file `book.yaml` does not list (#23).
 
 ## 0.1.0
 

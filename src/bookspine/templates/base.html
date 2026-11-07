@@ -183,7 +183,7 @@ window.MathJax = {
 
     <footer class="colophon">
       <span>{{ book.title }} · {{ book.author }} · Revised {{ build_date }}</span>
-      {% if book.edit_url and page.kind != "glossary" %}
+      {% if book.edit_url and page.kind not in ("glossary", "404") %}
       <span><a href="{{ book.edit_url }}{{ page.source_path.as_posix() }}" class="external" rel="noopener">Edit this page</a></span>
       {% endif %}
     </footer>

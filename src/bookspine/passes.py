@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from bookspine.config import (
+    EQUATION_ANCHOR_PREFIX,
     LABELLED_BOXES,
     NUMBERED_BOXES,
     SEARCH_CRUMB_SEPARATOR,
@@ -36,9 +37,10 @@ _BOX_PATTERN = re.compile(
     re.S,
 )
 _CITE_PATTERN = re.compile(r"\[@([^\]]+)\]")
-_LINK_PATTERN = re.compile(
-    r'(href|src)="([^"#]*?\.(?:md|svg|png|jpe?g|gif|pdf|webp))(#[^"]*)?"'
-)
+_LINK_PATTERN = re.compile(r'(href|src)="([^"]*)"')
+_LINK_SCHEME_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
+_ID_PATTERN = re.compile(r'\sid="([^"]+)"')
+_SAME_PAGE_LINK_PATTERN = re.compile(r'href="#([^"]+)"')
 _TAG_PATTERN = re.compile(r"<[^>]+>")
 _TAB_LABEL_PATTERN = re.compile(r'<label for="__tabbed_.*?</label>', re.S)
 _EXTERNAL_LINK_PATTERN = re.compile(
@@ -269,7 +271,7 @@ def rewrite_links(
     pages_by_source: dict[Path, Page],
     assets: set[Path],
     book_dir: Path,
-) -> None:
+) -> list[tuple[Page, Page, str]]:
     """Rewrite ``.md`` links into site URLs and check that every target exists.
 
     Parameters
@@ -283,16 +285,30 @@ def rewrite_links(
     book_dir : Path
         The book's sources.
 
+    Returns
+    -------
+    list of tuple
+        The page, the page it links to and the anchor, for each link to an anchor of
+        another page, which :func:`check_anchors` checks once every page is finished.
+
     Raises
     ------
     BuildError
-        If a link leaves the book, or its target is not in ``book.yaml`` or on disk.
+        If a link starts at the site's root or leaves the book, or its target is not in
+        ``book.yaml`` or on disk.
     """
+    anchor_links: list[tuple[Page, Page, str]] = []
 
     def replace(match: re.Match[str]) -> str:
-        attr, target, fragment = match.group(1), match.group(2), match.group(3) or ""
-        if "://" in target or target.startswith("/"):
+        attr, link = match.group(1), match.group(2)
+        if not link or link.startswith(("#", "//")) or _LINK_SCHEME_PATTERN.match(link):
             return match.group(0)
+        if link.startswith("/"):
+            raise BuildError(
+                f"{page.source_path}: absolute link, use a relative one: {link}"
+            )
+        target, _, anchor = link.partition("#")
+        fragment = f"#{anchor}" if anchor else ""
         resolved = _resolved_link(page, target)
         if target.endswith(".md"):
             dest = pages_by_source.get(resolved)
@@ -301,6 +317,8 @@ def rewrite_links(
                     f"{page.source_path}: link to a page that is not in book.yaml: "
                     f"{target}"
                 )
+            if anchor:
+                anchor_links.append((page, dest, anchor))
             return f'{attr}="{page.href(dest)}{fragment}"'
         if not (book_dir / resolved).is_file():
             raise BuildError(f"{page.source_path}: missing asset: {target}")
@@ -308,6 +326,40 @@ def rewrite_links(
         return f'{attr}="{page.root}{resolved.as_posix()}{fragment}"'
 
     page.body_html = _LINK_PATTERN.sub(replace, page.body_html)
+    return anchor_links
+
+
+def check_anchors(
+    page_html: dict[Page, str], anchor_links: list[tuple[Page, Page, str]]
+) -> None:
+    """Check that the anchors links point at exist on the finished pages.
+
+    Parameters
+    ----------
+    page_html : dict
+        Each page's finished HTML. The templates add ids of their own.
+    anchor_links : list of tuple
+        What :func:`rewrite_links` returned, to which each page's links to itself are
+        added here.
+
+    Raises
+    ------
+    BuildError
+        If a link names an anchor its page does not have.
+    """
+    anchors = {page: set(_ID_PATTERN.findall(text)) for page, text in page_html.items()}
+    same_page_links = [
+        (page, page, anchor)
+        for page, text in page_html.items()
+        for anchor in _SAME_PAGE_LINK_PATTERN.findall(text)
+    ]
+    for page, dest, anchor in anchor_links + same_page_links:
+        if anchor.startswith(EQUATION_ANCHOR_PREFIX):
+            continue
+        if anchor not in anchors[dest]:
+            raise BuildError(
+                f"{page.source_path}: no anchor #{anchor} in {dest.source_path}"
+            )
 
 
 def _resolved_link(page: Page, target: str) -> Path:

@@ -4,10 +4,19 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import urlsplit
 
 import yaml
 
-from bookspine.config import CONFIG_NAME, OPENER_NAME, BookConfig, parse_yaml
+from bookspine.config import (
+    CONFIG_NAME,
+    NOT_FOUND_KIND,
+    NOT_FOUND_NAME,
+    NOT_FOUND_TITLE,
+    OPENER_NAME,
+    BookConfig,
+    parse_yaml,
+)
 from bookspine.errors import BuildError
 
 _FRONT_MATTER_PATTERN = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
@@ -57,8 +66,8 @@ class Page:
     Parameters
     ----------
     kind : str
-        ``"home"``, ``"part"``, ``"chapter"``, ``"section"``, ``"glossary"`` or
-        ``"help"``.
+        ``"home"``, ``"part"``, ``"chapter"``, ``"section"``, ``"glossary"``, ``"help"``
+        or ``"404"``.
     source_path : Path
         The Markdown source, relative to ``book/``.
     url : str
@@ -90,6 +99,8 @@ class Page:
         The page's first paragraph and its summary as HTML, in the reference layout.
     prev, next : Page or None
         The neighbouring pages in reading order.
+    fixed_root : str
+        The site's path, for a page that any address can show. Its links start there.
     """
 
     kind: str
@@ -113,6 +124,7 @@ class Page:
     summary_html: str = ""
     prev: "Page | None" = None
     next: "Page | None" = None
+    fixed_root: str = ""
 
     @property
     def status(self) -> str:
@@ -151,7 +163,9 @@ class Page:
     @property
     def output_name(self) -> str:
         """The page's file, as a POSIX path relative to the site directory."""
-        return f"{self.url}index.html"
+        return (
+            NOT_FOUND_NAME if self.kind == NOT_FOUND_KIND else f"{self.url}index.html"
+        )
 
     @property
     def depth(self) -> int:
@@ -159,6 +173,8 @@ class Page:
 
     @property
     def root(self) -> str:
+        if self.fixed_root:
+            return self.fixed_root
         return "../" * self.depth if self.depth else "./"
 
     def href(self, target: "Page") -> str:
@@ -234,6 +250,19 @@ def read_help_page(name: str, book_dir: Path, pages: list[Page]) -> Page:
                 f"{CONFIG_NAME}: help_page {name} clashes with {page.source_path}"
             )
     return help_page
+
+
+def make_not_found_page(config: BookConfig) -> Page:
+    """Return the page served for a missing address, which stands outside the book."""
+    return Page(
+        kind=NOT_FOUND_KIND,
+        source_path=Path(NOT_FOUND_NAME),
+        url="",
+        meta={},
+        body_md="",
+        title=NOT_FOUND_TITLE,
+        fixed_root=f"{urlsplit(config.url).path.rstrip('/')}/",
+    )
 
 
 def load_pages(config: BookConfig, book_dir: Path) -> list[Page]:
