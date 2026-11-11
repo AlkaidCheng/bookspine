@@ -1,20 +1,83 @@
 (function () {
   "use strict";
 
+  /* ---------------------------------------------------------- colour scheme */
+
+  /* The button steps through three choices: "system" follows the system's colour scheme,
+     "light" and "dark" keep one. "system" is stored as no entry, so a reader who never
+     clicks keeps following the system. From "system" the button goes to the other scheme
+     and then to the system's scheme kept, so the first click always changes the colours. */
+  var THEME_KEY = "theme";
+  var THEME_STATES = {
+    system: "Following the system's colour scheme",
+    light: "Light colour scheme",
+    dark: "Dark colour scheme"
+  };
+  var THEME_ACTIONS = {
+    system: "Follow the system",
+    light: "Switch to light",
+    dark: "Switch to dark"
+  };
+
+  function nextThemeChoice(choice, systemIsDark) {
+    var systemScheme = systemIsDark ? "dark" : "light";
+    var otherScheme = systemIsDark ? "light" : "dark";
+    if (choice === "system") return otherScheme;
+    if (choice === otherScheme) return systemScheme;
+    return "system";
+  }
+
+  function themeScheme(choice, systemIsDark) {
+    if (choice === "system") return systemIsDark ? "dark" : "light";
+    return choice;
+  }
+
+  function themeLabel(choice, systemIsDark) {
+    return THEME_STATES[choice] + ". " + THEME_ACTIONS[nextThemeChoice(choice, systemIsDark)] + ".";
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+      nextThemeChoice: nextThemeChoice,
+      themeLabel: themeLabel,
+      themeScheme: themeScheme
+    };
+  }
+  if (typeof document === "undefined") return;
+
   var root = document.documentElement;
   var body = document.body;
   var base = root.getAttribute("data-root") || "./";
 
-  /* ---------------------------------------------------------- colour scheme */
-
+  var systemDark = window.matchMedia("(prefers-color-scheme: dark)");
   var toggle = document.querySelector(".theme-toggle");
+  var themeChoice = root.getAttribute("data-theme-choice");
+  if (themeChoice !== "light" && themeChoice !== "dark") themeChoice = "system";
+
+  function applyThemeChoice() {
+    root.setAttribute("data-theme-choice", themeChoice);
+    root.setAttribute("data-theme", themeScheme(themeChoice, systemDark.matches));
+    if (toggle) {
+      var label = themeLabel(themeChoice, systemDark.matches);
+      toggle.setAttribute("aria-label", label);
+      toggle.title = label;
+    }
+  }
+
+  applyThemeChoice();
   if (toggle) {
     toggle.addEventListener("click", function () {
-      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", next);
-      try { localStorage.setItem("theme", next); } catch (e) {}
+      themeChoice = nextThemeChoice(themeChoice, systemDark.matches);
+      try {
+        if (themeChoice === "system") localStorage.removeItem(THEME_KEY);
+        else localStorage.setItem(THEME_KEY, themeChoice);
+      } catch (e) {}
+      applyThemeChoice();
     });
   }
+  /* A page left open follows the system when it changes, and the button's next step
+     changes with it. */
+  if (systemDark.addEventListener) systemDark.addEventListener("change", applyThemeChoice);
 
   /* ---------------------------------------------------------- phone sidebar */
 

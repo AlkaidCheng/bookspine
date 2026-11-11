@@ -292,6 +292,15 @@ def test_the_dark_scheme_leaves_the_light_schemes_line_numbers_alone(
     assert '[data-theme="dark"] .highlight .k ' in css
 
 
+def test_the_colour_scheme_button_has_an_icon_for_each_choice(site_dir: Path) -> None:
+    page_html = page_text(site_dir, "")
+    button = re.search(r'class="iconbtn theme-toggle".*?</button>', page_html, re.S)
+    assert button
+    icons = re.findall(r'<svg class="(\w+)"', button.group(0))
+    assert icons == ["system", "sun", "moon"]
+    assert 'setAttribute("data-theme-choice", choice)' in page_html
+
+
 def test_an_unknown_colour_style_stops_the_build(project_dir: Path) -> None:
     add_to_config(project_dir, "\npygments_dark: no-such-style\n")
     with pytest.raises(BuildError, match="book.yaml: .*no-such-style"):

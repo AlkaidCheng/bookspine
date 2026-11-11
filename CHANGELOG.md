@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Give the `.theme-toggle` button a third choice, which follows the system's colour scheme even while a page is open (#25).
+
 ## 0.2.0
 
 - Add tabs, written `=== "Label"`, to `convert_markdown`, with choices that `book.js` carries across sets and pages (#20).
