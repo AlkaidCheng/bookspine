@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Give the `.theme-toggle` button a third choice, which follows the system's colour scheme even while a page is open (#25).
 
