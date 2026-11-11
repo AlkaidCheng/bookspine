@@ -136,8 +136,11 @@ kbd {
 }
 .iconbtn:hover { background: var(--paper-2); color: var(--ink); }
 .menu { display: none; }
-:root[data-theme="dark"] .theme-toggle .moon { display: none; }
-:root:not([data-theme="dark"]) .theme-toggle .sun { display: none; }
+/* The icon shows the reader's choice; "system" is the default. */
+.theme-toggle svg { display: none; }
+:root:not([data-theme-choice="light"]):not([data-theme-choice="dark"]) .theme-toggle .system,
+:root[data-theme-choice="light"] .theme-toggle .sun,
+:root[data-theme-choice="dark"] .theme-toggle .moon { display: block; }
 
 /* ------------------------------------------------------------------ layout */
 

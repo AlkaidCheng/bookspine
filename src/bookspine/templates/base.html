@@ -9,9 +9,13 @@
 <link rel="icon" href="{{ page.root }}static/favicon.svg" type="image/svg+xml">
 <script>
 (function () {
-  var saved = null;
-  try { saved = localStorage.getItem("theme"); } catch (e) {}
-  var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var choice = null;
+  try { choice = localStorage.getItem("theme"); } catch (e) {}
+  if (choice !== "light" && choice !== "dark") choice = "system";
+  var dark = choice === "system"
+    ? window.matchMedia("(prefers-color-scheme: dark)").matches
+    : choice === "dark";
+  document.documentElement.setAttribute("data-theme-choice", choice);
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
 })();
 </script>
@@ -79,8 +83,9 @@ window.MathJax = {
     <button class="iconbtn search-open" type="button" aria-label="Search the {{ book.search_scope }}" title="Search (press /)">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
-    <button class="iconbtn theme-toggle" type="button" aria-label="Toggle colour scheme" title="Light / dark">
-      <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <button class="iconbtn theme-toggle" type="button" aria-label="Colour scheme" title="Colour scheme">
+      <svg class="system" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+      <svg class="sun"viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
     </button>
   </div>
