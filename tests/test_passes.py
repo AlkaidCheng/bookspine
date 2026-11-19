@@ -2,6 +2,7 @@
 
 import html
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
@@ -98,6 +99,48 @@ def test_a_local_svg_is_inlined_without_its_xml_declaration(tmp_path: Path) -> N
     number_figures_and_tables(page, tmp_path)
     assert '<svg class="inline-svg" role="img"' in page.body_html
     assert "<?xml" not in page.body_html
+
+
+def start_tag(body_html: str, tag: str) -> dict[str, str | None]:
+    """Return the attributes of the first `tag` in `body_html`, as a browser reads them."""
+    found: list[dict[str, str | None]] = []
+
+    class Parser(HTMLParser):
+        def handle_starttag(
+            self, name: str, attrs: list[tuple[str, str | None]]
+        ) -> None:
+            if name == tag and not found:
+                found.append(dict(attrs))
+
+    Parser().feed(body_html)
+    return found[0]
+
+
+def test_a_cited_caption_leaves_the_svg_start_tag_whole(tmp_path: Path) -> None:
+    svg_path = tmp_path / "part" / "a.svg"
+    svg_path.parent.mkdir()
+    svg_path.write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 1"/>')
+    page = make_page(
+        convert_markdown("![A & B, after [@paper].](a.svg)"),
+        meta={"references": {"paper": "A paper."}},
+    )
+    number_figures_and_tables(page, tmp_path)
+    resolve_citations(page)
+    svg = start_tag(page.body_html, "svg")
+    assert svg["viewbox"] == "0 0 4 1"
+    assert svg["xmlns"] == "http://www.w3.org/2000/svg"
+    assert svg["aria-label"] == "A & B, after."
+
+
+def test_a_cited_caption_leaves_the_image_alt_text_whole(tmp_path: Path) -> None:
+    page = make_page(
+        convert_markdown("![A plot [@paper].](a.png)"),
+        meta={"references": {"paper": "A paper."}},
+    )
+    number_figures_and_tables(page, tmp_path)
+    resolve_citations(page)
+    assert start_tag(page.body_html, "img") == {"src": "a.png", "alt": "A plot."}
+    assert '<a class="cite" href="#ref-paper">1</a>' in page.body_html
 
 
 def test_a_remote_svg_stays_an_image(tmp_path: Path) -> None:

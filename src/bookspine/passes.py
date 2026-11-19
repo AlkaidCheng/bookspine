@@ -37,6 +37,7 @@ _BOX_PATTERN = re.compile(
     re.S,
 )
 _CITE_PATTERN = re.compile(r"\[@([^\]]+)\]")
+_SPACED_CITE_PATTERN = re.compile(r"\s*\[@[^\]]+\]")
 _LINK_PATTERN = re.compile(r'(href|src)="([^"]*)"')
 _LINK_SCHEME_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
 _ID_PATTERN = re.compile(r'\sid="([^"]+)"')
@@ -116,8 +117,24 @@ def number_headings(page: Page) -> None:
     page.sections = sections
 
 
-def inline_svg(page: Page, img: str, caption: str, book_dir: Path) -> str | None:
+def inline_svg(page: Page, img: str, text: str, book_dir: Path) -> str | None:
     """Embed a local SVG figure so it can use the page's colour tokens.
+
+    Parameters
+    ----------
+    page : Page
+        The page that shows the figure.
+    img : str
+        The figure's ``<img>`` tag.
+    text : str
+        The plain text that names the figure to a screen reader.
+    book_dir : Path
+        The directory that page sources are relative to.
+
+    Returns
+    -------
+    str or None
+        The SVG, or None if `img` is not a local SVG.
 
     Raises
     ------
@@ -131,9 +148,9 @@ def inline_svg(page: Page, img: str, caption: str, book_dir: Path) -> str | None
     if not path.is_file():
         raise BuildError(f"{page.source_path}: missing figure: {src.group(1)}")
     svg = _XML_DECLARATION_PATTERN.sub("", path.read_text(encoding="utf-8")).strip()
-    title = html.escape(caption, quote=True)
+    label = html.escape(text)
     return svg.replace(
-        "<svg", f'<svg class="inline-svg" role="img" aria-label="{title}"', 1
+        "<svg", f'<svg class="inline-svg" role="img" aria-label="{label}"', 1
     )
 
 
@@ -146,11 +163,15 @@ def number_figures_and_tables(page: Page, book_dir: Path) -> None:
         fig = counters["figure"] = counters.get("figure", 0) + 1
         img = match.group(1)
         alt = _IMG_ALT_PATTERN.search(img)
-        caption = alt.group(1) if alt else ""
-        body = inline_svg(page, img, caption, book_dir) or img
+        caption = html.unescape(alt.group(1)) if alt else ""
+        # resolve_citations reads the whole page, so no citation may stay in a tag.
+        text = _SPACED_CITE_PATTERN.sub("", caption).strip()
+        body = inline_svg(page, img, text, book_dir)
+        if body is None:
+            body = _IMG_ALT_PATTERN.sub(lambda _: f'alt="{html.escape(text)}"', img, 1)
         return (
             f'<figure id="fig-{fig}">{body}<figcaption>'
-            f'<span class="caplabel">Figure {label}{fig}</span> {caption}'
+            f'<span class="caplabel">Figure {label}{fig}</span> {html.escape(caption)}'
             f'{anchor_link(f"fig-{fig}")}</figcaption></figure>'
         )
 

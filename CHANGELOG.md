@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Stop a citation in a figure's caption from breaking the figure's `<svg>` or `<img>` tag in `number_figures_and_tables` (#27).
+
 ## 0.3.0
 
 - Give the `.theme-toggle` button a third choice, which follows the system's colour scheme even while a page is open (#25).
