@@ -14,7 +14,7 @@ from bookspine.config import (
     SEARCH_TEXT_LIMIT,
     UNNUMBERED_HEADINGS,
 )
-from bookspine.converter import convert_markdown
+from bookspine.converter import caption_html, convert_markdown
 from bookspine.errors import BuildError
 from bookspine.pages import Page
 
@@ -171,7 +171,7 @@ def number_figures_and_tables(page: Page, book_dir: Path) -> None:
             body = _IMG_ALT_PATTERN.sub(lambda _: f'alt="{html.escape(text)}"', img, 1)
         return (
             f'<figure id="fig-{fig}">{body}<figcaption>'
-            f'<span class="caplabel">Figure {label}{fig}</span> {html.escape(caption)}'
+            f'<span class="caplabel">Figure {label}{fig}</span> {caption_html(caption)}'
             f'{anchor_link(f"fig-{fig}")}</figcaption></figure>'
         )
 

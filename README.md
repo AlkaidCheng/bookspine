@@ -126,11 +126,11 @@ numbers. Each page has its own `references` and reference list.
 
 ### Figures and tables
 
-`![caption](figures/name.svg)` on a line of its own becomes a numbered figure. A local
-SVG is copied into the page, so it can use the theme's colours and follow the colour
-scheme. A table followed by a paragraph starting `Table:` becomes a numbered table, and
-a table with no caption takes no number. A button on each figure and table opens it
-enlarged.
+`![caption](figures/name.svg)` on a line of its own becomes a numbered figure, whose
+caption takes inline math and citations but no other Markdown. A local SVG is copied
+into the page, so it can use the theme's colours and follow the colour scheme. A
+table followed by a paragraph starting `Table:` becomes a numbered table, and a table
+with no caption takes no number. A button on each figure and table opens it enlarged.
 
 ### Code
 

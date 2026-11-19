@@ -143,6 +143,18 @@ def test_a_cited_caption_leaves_the_image_alt_text_whole(tmp_path: Path) -> None
     assert '<a class="cite" href="#ref-paper">1</a>' in page.body_html
 
 
+def test_caption_math_is_set_for_mathjax(tmp_path: Path) -> None:
+    page = make_page(
+        convert_markdown("![Mass $m_Z$ and width \\(\\Gamma_Z\\).](a.png)")
+    )
+    number_figures_and_tables(page, tmp_path)
+    assert (
+        '<span class="caplabel">Figure 3.1</span> Mass '
+        '<span class="arithmatex">\\(m_Z\\)</span> and width '
+        '<span class="arithmatex">\\(\\Gamma_Z\\)</span>.'
+    ) in page.body_html
+
+
 def test_a_remote_svg_stays_an_image(tmp_path: Path) -> None:
     img = '<img alt="A" src="https://example.org/a.svg">'
     page = make_page(f"<p>{img}</p>")
