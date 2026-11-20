@@ -6,6 +6,7 @@
 - Give an inline SVG the full width of the enlarged view in `book.css`, and let an enlarged figure scroll sideways at phone width (#27).
 - Set the math in a figure's caption, written `$…$` or `\(…\)`, for MathJax in `number_figures_and_tables` (#27).
 - Stop a citation in an attribute, such as a link's or an abbreviation's title, from breaking its tag in `resolve_citations`, which writes its number there as text (#28).
+- Leave a heading's citations out of the section titles that `number_headings` collects for the contents (#28).
 
 ## 0.3.0
 

@@ -97,7 +97,9 @@ def number_headings(page: Page) -> None:
 
     def replace(match: re.Match[str]) -> str:
         level, anchor, text = int(match.group(1)), match.group(2), match.group(3)
-        plain = html.unescape(re.sub(r"<[^>]+>", "", text)).strip()
+        # The contents show the title alone, and the heading links its citations.
+        plain = html.unescape(_TAG_PATTERN.sub("", text))
+        plain = _SPACED_CITE_PATTERN.sub("", plain).strip()
         unnumbered = "unnumbered" in text or plain.lower() in UNNUMBERED_HEADINGS
         if level == 2:
             counters[1] = 0

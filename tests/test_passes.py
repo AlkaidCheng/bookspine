@@ -64,6 +64,13 @@ def test_a_section_title_holds_the_heading_text_not_its_html() -> None:
     assert page.sections[0]["title"] == "Updates and R&D"
 
 
+def test_a_section_title_leaves_out_the_heading_citations() -> None:
+    page = make_page('<h2 id="fit">Results of the fit [@a; @b]</h2>')
+    number_headings(page)
+    assert page.sections[0]["title"] == "Results of the fit"
+    assert "Results of the fit [@a; @b]" in page.body_html
+
+
 def test_a_section_page_numbers_within_itself() -> None:
     page = make_page('<h2 id="one">One</h2>', kind="section", number="3.2")
     number_headings(page)
