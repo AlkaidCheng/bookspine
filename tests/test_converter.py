@@ -2,10 +2,11 @@
 
 import random
 import re
+from html import unescape
 
 import pytest
 
-from bookspine.converter import convert_markdown
+from bookspine.converter import caption_html, convert_markdown
 
 # What Python-Markdown and pymdown-extensions gave for each source, which the adapters
 # keep. Only whitespace between tags may differ.
@@ -234,6 +235,39 @@ def test_an_environment_inside_a_paragraph_stays_as_text() -> None:
 
 def test_a_paragraph_of_inline_math_keeps_its_paragraph() -> None:
     assert convert_markdown("\\(x\\)\n").startswith('<p><span class="arithmatex">')
+
+
+def test_math_in_alt_text_stays_text() -> None:
+    assert convert_markdown("![A \\(x < y\\) plot](a.png)") == (
+        '<p><img src="a.png" alt="A \\(x &lt; y\\) plot" /></p>'
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "$x$",
+        "$ x$",
+        "$x $",
+        "costs $5 and $10",
+        "a$x$b",
+        "$x$5",
+        "$a{$}b$",
+        "$x$$y$",
+        "$$a$ b",
+        "$a < b$ & c",
+    ],
+)
+def test_caption_math_follows_the_rules_of_body_text(text: str) -> None:
+    alt = re.search(r'alt="([^"]*)"', convert_markdown(f"![{text}](a.png)"))
+    assert alt is not None
+    body = convert_markdown(text).removeprefix("<p>").removesuffix("</p>")
+    assert caption_html(unescape(alt[1])) == body
+
+
+@pytest.mark.parametrize("text", ["\\(x\\)", "$$x$$"])
+def test_caption_math_is_inline_whatever_its_delimiters(text: str) -> None:
+    assert caption_html(text) == '<span class="arithmatex">\\(x\\)</span>'
 
 
 def test_the_longest_abbreviation_wins() -> None:

@@ -691,7 +691,9 @@ ol.references li:target { background: var(--accent-soft); }
   background: var(--paper);
 }
 .lightbox-content figure { margin: 0; }
-.lightbox-content svg { width: min(88vw, 80rem); height: auto; }
+/* The box is as wide as its content, so the page's 100% would leave an inline SVG
+   without width attributes at 300px. svg.inline-svg outweighs figure svg.inline-svg. */
+.lightbox-content svg, .lightbox-content svg.inline-svg { width: min(88vw, 80rem); height: auto; }
 .lightbox-content img { width: min(88vw, 80rem); }
 .lightbox-content figure.table { width: min(88vw, 72rem); }
 .lightbox-content .table-wrap { overflow-x: auto; }
@@ -705,7 +707,10 @@ body.lightbox-open { overflow: hidden; }
   .lightbox { padding: 0.5rem; }
   .lightbox-body { padding: 0 1rem 1rem; max-width: 100vw; max-height: 96vh; }
   .lightbox-head { margin-right: -0.5rem; }
-  .lightbox-content svg, .lightbox-content img { width: max(100%, 48rem); }
+  /* Wider than the screen, so the box scrolls, which max-width: 100% would prevent. */
+  .lightbox-content svg, .lightbox-content svg.inline-svg, .lightbox-content img {
+    width: max(100%, 48rem); max-width: none;
+  }
   .lightbox-content figure.table { width: 100%; }
   .lightbox-content figure.table table { min-width: 44rem; }
 }

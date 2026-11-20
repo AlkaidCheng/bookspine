@@ -14,7 +14,7 @@ $$
 x = 1 \label{eq:one} \glossary{Unit value}
 $$
 
-![A flow of steps](figures/flow.svg)
+![A flow of steps from $x_0$ to \(x_1\) [@first-paper].](figures/flow.svg)
 
 | Name | Value |
 |------|-------|

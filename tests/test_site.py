@@ -122,6 +122,19 @@ def test_links_and_citations_resolve(site_dir: Path) -> None:
     assert '<a class="cite" href="#ref-first-paper">1</a>' in basics
 
 
+def test_a_figure_caption_takes_math_and_citations(site_dir: Path) -> None:
+    basics = page_text(site_dir, "methods/basics")
+    assert (
+        '<svg class="inline-svg" role="img" '
+        'aria-label="A flow of steps from $x_0$ to \\(x_1\\)." '
+        'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+    ) in basics
+    assert (
+        'from <span class="arithmatex">\\(x_0\\)</span> to '
+        '<span class="arithmatex">\\(x_1\\)</span> <span class="cites">'
+    ) in basics
+
+
 def test_a_bare_url_can_wrap_and_stays_whole_in_the_search(site_dir: Path) -> None:
     address = "https://example.org/journal/2020/first_paper.html"
     basics = page_text(site_dir, "methods/basics")

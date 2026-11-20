@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Stop a citation in a figure's caption from breaking the figure's `<svg>` or `<img>` tag in `number_figures_and_tables` (#27).
+- Give an inline SVG the full width of the enlarged view in `book.css`, and let an enlarged figure scroll sideways at phone width (#27).
+- Set the math in a figure's caption, written `$…$` or `\(…\)`, for MathJax in `number_figures_and_tables` (#27).
+
 ## 0.3.0
 
 - Give the `.theme-toggle` button a third choice, which follows the system's colour scheme even while a page is open (#25).

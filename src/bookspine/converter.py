@@ -55,6 +55,19 @@ _ATTRIBUTE_PATTERN = re.compile(
 )
 _MATH_START_PATTERN = re.compile(r"^(?P<indent> *)(?:\\begin\{(?P<name>[\w*]+)\}|\\\[)")
 _INLINE_MATH_PATTERN = re.compile(r"(?P<code>(`+).+?\2)|\\\((?P<math>.+?)\\\)")
+_INLINE_MARKER_PATTERN = re.compile("\\d+")
+
+# Math in a caption, which is plain text, read by pulldown-cmark's rules for $: math
+# holds no $ unless escaped or in braces, and inline math neither starts nor ends with
+# a space. Here a $ is skipped inside one level of braces only. Every form is inline.
+# https://github.com/pulldown-cmark/pulldown-cmark/blob/v0.13.6/pulldown-cmark/specs/math.txt
+_CAPTION_MATH_CONTENT = r"(?:\{[^{}]*\}|\\.|[^$\\])+?"
+_CAPTION_MATH_PATTERN = re.compile(
+    rf"\$\$(?P<double>{_CAPTION_MATH_CONTENT})\$\$"
+    rf"|\$(?P<single>(?!\s){_CAPTION_MATH_CONTENT}(?<!\s))\$"
+    r"|\\\((?P<bracketed>.+?)\\\)",
+    re.S,
+)
 
 # What pulldown-cmark returns.
 _PARAGRAPH_WRAPPER_PATTERN = re.compile(r"^<p>|</p>$")
@@ -121,8 +134,15 @@ class _Extras:
         for marker, block in reversed(self.blocks.items()):
             if marker[0] == _BLOCK_MARKER[0]:
                 body = body.replace(f"<p>{marker}</p>", block)
-            body = body.replace(marker, block)
-        return body
+                body = body.replace(marker, block)
+        # Math in an attribute, such as an image's alt text, stays the text it was.
+        body = _TAG_PATTERN.sub(
+            lambda tag: _INLINE_MARKER_PATTERN.sub(self._math_text, tag[0]), body
+        )
+        return _INLINE_MARKER_PATTERN.sub(lambda marker: self.blocks[marker[0]], body)
+
+    def _math_text(self, marker: re.Match[str]) -> str:
+        return _TAG_PATTERN.sub("", self.blocks[marker[0]]).replace('"', "&quot;")
 
 
 def convert_markdown(text: str) -> str:
@@ -133,6 +153,29 @@ def convert_markdown(text: str) -> str:
     body = _set_attributes(extras.restore(blocks), extras)
     body = _mark_text(body, extras)
     return _add_heading_anchors(body + _footnotes_html(extras)).strip()
+
+
+def caption_html(text: str) -> str:
+    """Return the HTML of a figure's caption, with its math set as in body text.
+
+    Parameters
+    ----------
+    text : str
+        The caption as plain text: the image's alt text, unescaped. pulldown-cmark
+        writes the math in it between ``$`` signs, and ``\\(…\\)`` stays as written.
+
+    Returns
+    -------
+    str
+        The escaped `text`, its math inline in MathJax's delimiters whatever its own.
+    """
+
+    def replace(match: re.Match[str]) -> str:
+        source = match["double"] or match["single"] or match["bracketed"]
+        return rf'<span class="arithmatex">\({source}\)</span>'
+
+    # Escaping leaves the characters that delimit math as they are.
+    return _CAPTION_MATH_PATTERN.sub(replace, html.escape(text))
 
 
 def _parse(text: str) -> str:
