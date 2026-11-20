@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
 
 - Stop a citation in a figure's caption from breaking the figure's `<svg>` or `<img>` tag in `number_figures_and_tables` (#27).
 - Give an inline SVG the full width of the enlarged view in `book.css`, and let an enlarged figure scroll sideways at phone width (#27).
