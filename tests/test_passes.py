@@ -64,6 +64,13 @@ def test_a_section_title_holds_the_heading_text_not_its_html() -> None:
     assert page.sections[0]["title"] == "Updates and R&D"
 
 
+def test_a_section_title_leaves_out_the_heading_citations() -> None:
+    page = make_page('<h2 id="fit">Results of the fit [@a; @b]</h2>')
+    number_headings(page)
+    assert page.sections[0]["title"] == "Results of the fit"
+    assert "Results of the fit [@a; @b]" in page.body_html
+
+
 def test_a_section_page_numbers_within_itself() -> None:
     page = make_page('<h2 id="one">One</h2>', kind="section", number="3.2")
     number_headings(page)
@@ -240,6 +247,33 @@ def test_citations_in_code_stay_as_written() -> None:
     page = make_page("<code>[@a]</code>")
     resolve_citations(page)
     assert page.body_html == "<code>[@a]</code>"
+
+
+def test_a_citation_in_a_tag_reads_as_its_number() -> None:
+    page = make_page(
+        convert_markdown(
+            'LEP, a [link](https://example.org "as in [@a]") and an icon '
+            "![icon from [@b]](i.png), then [@b].\n\n"
+            "*[LEP]: Large Electron-Positron collider [@a]\n"
+        ),
+        meta={"references": {"a": "Paper A", "b": "Paper B"}},
+    )
+    assert resolve_citations(page) == []
+    assert start_tag(page.body_html, "abbr")["title"] == (
+        "Large Electron-Positron collider [1]"
+    )
+    assert start_tag(page.body_html, "a")["title"] == "as in [1]"
+    assert start_tag(page.body_html, "img")["alt"] == "icon from [2]"
+    assert '<a class="cite" href="#ref-b">2</a>' in page.body_html
+
+
+def test_a_tag_is_read_past_a_quoted_angle_bracket() -> None:
+    page = make_page(
+        '<p><span title="a > b, after [@a]">x</span></p>',
+        meta={"references": {"a": "Paper A"}},
+    )
+    resolve_citations(page)
+    assert start_tag(page.body_html, "span")["title"] == "a > b, after [1]"
 
 
 def test_references_must_be_a_mapping() -> None:

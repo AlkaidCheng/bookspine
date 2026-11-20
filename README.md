@@ -184,9 +184,11 @@ written inside them. A page with no math does not load MathJax.
 ### Citations
 
 `[@key]` cites an entry of the page's `references`, and `[@a; @b]` cites several. The
-reference list is generated at the end of the page, in order of first citation. A link
-that shows its own address, such as `<https://example.org/a/long/path>`, wraps between
-the address's elements with no hyphen added, so a long one fits a phone's screen.
+reference list is generated at the end of the page, in order of first citation. Where a
+link cannot go, as in a link's or an abbreviation's title, a citation reads as its
+number, and the contents show a heading without its citations. A link that shows its own
+address, such as `<https://example.org/a/long/path>`, wraps between the address's
+elements with no hyphen added, so a long one fits a phone's screen.
 
 ### Boxes
 

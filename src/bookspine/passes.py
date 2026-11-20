@@ -43,6 +43,8 @@ _LINK_SCHEME_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
 _ID_PATTERN = re.compile(r'\sid="([^"]+)"')
 _SAME_PAGE_LINK_PATTERN = re.compile(r'href="#([^"]+)"')
 _TAG_PATTERN = re.compile(r"<[^>]+>")
+# A tag read whole, since a quoted attribute value may hold a >.
+_WHOLE_TAG_PATTERN = re.compile(r"""(<(?:[^>"']|"[^"]*"|'[^']*')+>)""")
 _TAB_LABEL_PATTERN = re.compile(r'<label for="__tabbed_.*?</label>', re.S)
 _EXTERNAL_LINK_PATTERN = re.compile(
     r'<a href="(https?://[^"]+)" class="external" rel="noopener">([^<\s]+)</a>'
@@ -95,7 +97,9 @@ def number_headings(page: Page) -> None:
 
     def replace(match: re.Match[str]) -> str:
         level, anchor, text = int(match.group(1)), match.group(2), match.group(3)
-        plain = html.unescape(re.sub(r"<[^>]+>", "", text)).strip()
+        # The contents show the title alone, and the heading links its citations.
+        plain = html.unescape(_TAG_PATTERN.sub("", text))
+        plain = _SPACED_CITE_PATTERN.sub("", plain).strip()
         unnumbered = "unnumbered" in text or plain.lower() in UNNUMBERED_HEADINGS
         if level == 2:
             counters[1] = 0
@@ -164,7 +168,7 @@ def number_figures_and_tables(page: Page, book_dir: Path) -> None:
         img = match.group(1)
         alt = _IMG_ALT_PATTERN.search(img)
         caption = html.unescape(alt.group(1)) if alt else ""
-        # resolve_citations reads the whole page, so no citation may stay in a tag.
+        # The name a screen reader gives the figure leaves out the caption's citations.
         text = _SPACED_CITE_PATTERN.sub("", caption).strip()
         body = inline_svg(page, img, text, book_dir)
         if body is None:
@@ -235,6 +239,9 @@ def number_boxes(page: Page) -> None:
 def resolve_citations(page: Page) -> list[str]:
     """Turn ``[@key]`` into numbered citations and append the reference list.
 
+    A citation inside a tag, such as in a link's title, cannot be a link, so it
+    becomes its number as text, ``[1]``.
+
     Returns
     -------
     list of str
@@ -262,14 +269,27 @@ def resolve_citations(page: Page) -> list[str]:
             order.append(key)
         return order.index(key) + 1
 
-    def replace(match: re.Match[str]) -> str:
-        keys = [k.strip().lstrip("@") for k in match.group(1).split(";") if k.strip()]
-        links = [f'<a class="cite" href="#ref-{k}">{number(k)}</a>' for k in keys]
+    def keys(match: re.Match[str]) -> list[str]:
+        return [k.strip().lstrip("@") for k in match.group(1).split(";") if k.strip()]
+
+    def link(match: re.Match[str]) -> str:
+        links = [
+            f'<a class="cite" href="#ref-{k}">{number(k)}</a>' for k in keys(match)
+        ]
         return f'<span class="cites">[{", ".join(links)}]</span>'
 
-    page.body_html = outside_code(
-        page.body_html, lambda segment: _CITE_PATTERN.sub(replace, segment)
-    )
+    def plain_number(match: re.Match[str]) -> str:
+        return f'[{", ".join(str(number(k)) for k in keys(match))}]'
+
+    def resolve(segment: str) -> str:
+        # Text and tags in the page's order, which the numbers follow.
+        parts = _WHOLE_TAG_PATTERN.split(segment)
+        return "".join(
+            _CITE_PATTERN.sub(plain_number if index % 2 else link, part)
+            for index, part in enumerate(parts)
+        )
+
+    page.body_html = outside_code(page.body_html, resolve)
     unused = [key for key in references if key not in order]
     if unused:
         warnings.append(
