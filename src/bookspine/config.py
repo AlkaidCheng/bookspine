@@ -98,6 +98,15 @@ GLOSSARY_EQUATIONS_URL = "glossary/equations/"
 # What the anchors MathJax makes in the browser start with.
 EQUATION_ANCHOR_PREFIX = "mjx-eqn:"
 
+# The marks for where a display equation may break on a narrow screen: macros with one
+# definition for a wide screen and one for a narrow screen, where each starts a new row
+# of the `aligned` environment it stands in. equations.js chooses between the two.
+# \narrowbreak divides one formula, and its new row is indented and opens with an empty
+# term, so that a sign after it is spaced as in a sum. \narrowsep parts two formulas of
+# one display.
+WIDE_SCREEN_MACROS = {"narrowbreak": "", "narrowsep": r"\qquad"}
+NARROW_SCREEN_MACROS = {"narrowbreak": r"\\ & \quad {}", "narrowsep": r"\\ &"}
+
 # The page served for a missing address, under the name GitHub Pages and most other
 # hosts look for: https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site
 NOT_FOUND_KIND = "404"
@@ -135,6 +144,7 @@ _FAST_YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 _SWITCH_KEYS = (
     "enlarge_tables",
     "export_menus",
+    "fit_equations",
     "glossary",
     "not_found_page",
     "sitemap",
@@ -272,6 +282,9 @@ class BookConfig:
     export_menus : bool
         Whether tables, figures, code blocks and equations offer an export menu. A code
         block keeps its copy button either way.
+    fit_equations : bool
+        Whether a display equation breaks at its marks on a narrow screen, and is drawn
+        smaller where it is still wider than the text, instead of scrolling.
     glossary : bool
         Whether ``\\glossary`` tags make glossary pages.
     not_found_page : bool
@@ -281,7 +294,8 @@ class BookConfig:
     wrap_code : bool
         Whether a long line of code wraps instead of scrolling.
     mathjax_macros : Mapping[str, Any]
-        TeX macros by name, each a definition or ``[definition, argument count]``.
+        TeX macros by name, each a definition or ``[definition, argument count]``. The
+        names in ``WIDE_SCREEN_MACROS`` are taken.
     pygments_light, pygments_dark : str
         The code colour styles of the two colour schemes.
     """
@@ -301,6 +315,7 @@ class BookConfig:
     search_hint: str = DEFAULT_SEARCH_HINT
     enlarge_tables: bool = True
     export_menus: bool = True
+    fit_equations: bool = True
     glossary: bool = True
     not_found_page: bool = False
     sitemap: bool = False
@@ -449,6 +464,11 @@ def _checked_macros(record: Any) -> Mapping[str, Any]:
     for name, definition in record.items():
         if not isinstance(name, str) or not _MACRO_NAME_PATTERN.fullmatch(name):
             raise BuildError(f"{CONFIG_NAME}: {name} is not a TeX macro name")
+        if name in WIDE_SCREEN_MACROS:
+            raise BuildError(
+                f"{CONFIG_NAME}: macro {name} marks where an equation may break "
+                "on a narrow screen, so a book cannot define it"
+            )
         if not _is_macro_definition(definition):
             raise BuildError(
                 f"{CONFIG_NAME}: macro {name} must be a definition or "

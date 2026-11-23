@@ -17,11 +17,13 @@ from pygments.util import ClassNotFound
 from bookspine.config import (
     BUILD_DATE_FORMAT,
     CONFIG_NAME,
+    NARROW_SCREEN_MACROS,
     REFERENCE_TEMPLATES_DIR_NAME,
     SITEMAP_NAME,
     SITEMAP_NAMESPACE,
     STATIC_DIR_NAME,
     TEMPLATES_DIR_NAME,
+    WIDE_SCREEN_MACROS,
     BookConfig,
     Project,
     load_config,
@@ -317,7 +319,11 @@ def page_files(
         glossary_page=next((page for page in pages if page.kind == "glossary"), None),
         help_page=next((page for page in pages if page.kind == "help"), None),
         icons=read_icons(project, pages),
+        # MathJax is configured for a wide screen, which is also what an exported
+        # equation defines. equations.js takes the narrow definitions from its tag.
+        mathjax_macros={**WIDE_SCREEN_MACROS, **config.mathjax_macros},
         mathjax_url=MATHJAX_URL,
+        narrow_macros=NARROW_SCREEN_MACROS,
     )
     parts = [page for page in pages if page.kind == "part"]
     extra_pages = [make_not_found_page(config)] if config.not_found_page else []

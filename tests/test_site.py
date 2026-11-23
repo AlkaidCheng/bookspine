@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 import pytest
 
 from bookspine import BuildError, BuildResult, build_book
+from bookspine.config import NARROW_SCREEN_MACROS
 from bookspine.equations import MATHJAX_URL
 from bookspine.safe_paths import STAMP_NAME
 from bookspine.site import read_traversable
@@ -30,7 +31,7 @@ PACKAGE_TEMPLATES = [
     "reference/section.html",
     "section.html",
 ]
-PACKAGE_STATIC = ["book.css", "book.js", "export.js", "favicon.svg"]
+PACKAGE_STATIC = ["book.css", "book.js", "equations.js", "export.js", "favicon.svg"]
 
 
 def page_text(site_dir: Path, url: str) -> str:
@@ -170,13 +171,51 @@ def test_macros_are_written_into_the_mathjax_configuration(site_dir: Path) -> No
     assert 'vec: ["\\\\boldsymbol{#1}", 1]\n' in home
 
 
-def test_a_book_without_macros_defines_none(plain_project_dir: Path) -> None:
+def test_the_marks_are_configured_as_on_a_wide_screen(site_dir: Path) -> None:
+    home = page_text(site_dir, "")
+    assert 'narrowbreak: "",\n' in home
+    assert 'narrowsep: "\\\\qquad",\n' in home
+
+
+def test_a_book_without_macros_defines_the_marks_alone(plain_project_dir: Path) -> None:
     config_path = plain_project_dir / "book.yaml"
     text = config_path.read_text(encoding="utf-8")
     start, end = text.index("mathjax_macros"), text.index("parts:")
     config_path.write_text(text[:start] + text[end:], encoding="utf-8")
-    site_dir = build_book(plain_project_dir).site_dir
-    assert "macros:" not in page_text(site_dir, "")
+    home = page_text(build_book(plain_project_dir).site_dir, "")
+    macros = home[home.index("macros: {") : home.index("options:")]
+    assert re.findall(r"(\w+): ", macros) == ["macros", "narrowbreak", "narrowsep"]
+    assert 'narrowsep: "\\\\qquad"\n' in macros
+
+
+def equations_script(page_html: str) -> re.Match[str] | None:
+    return re.search(
+        r'<script defer src="[./]*static/equations\.js" '
+        r"data-narrow-macros='([^']*)'></script>",
+        page_html,
+    )
+
+
+def test_the_script_that_fits_equations_runs_before_mathjax(site_dir: Path) -> None:
+    basics = page_text(site_dir, "methods/basics")
+    script = equations_script(basics)
+    assert script
+    assert json.loads(script.group(1)) == NARROW_SCREEN_MACROS
+    assert script.start() < basics.index(MATHJAX_URL)
+    assert (site_dir / "static" / "equations.js").is_file()
+
+
+def test_a_page_without_mathjax_fits_no_equations(site_dir: Path) -> None:
+    assert not equations_script(page_text(site_dir, ""))
+
+
+def test_a_book_can_turn_equation_fitting_off(project_dir: Path) -> None:
+    add_to_config(project_dir, "\nfit_equations: false\n")
+    basics = page_text(build_book(project_dir).site_dir, "methods/basics")
+    assert MATHJAX_URL in basics
+    assert not equations_script(basics)
+    # The pages keep their marks, which then read as on a wide screen.
+    assert 'narrowbreak: "",\n' in basics
 
 
 def test_mathjax_comes_from_the_version_the_count_follows(site_dir: Path) -> None:

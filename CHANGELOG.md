@@ -4,6 +4,7 @@
 
 - Resolve an `\eqref` or `\ref` written in running text in `resolve_equation_refs`, which checked and linked only those inside math (#30).
 - Resolve an `\eqref` or `\ref` in the first paragraph of a `reference` layout page, which `prepare_reference_page` moved out of the body before `resolve_equation_refs` ran (#31).
+- Break a display equation at its `\narrowbreak` and `\narrowsep` marks on a narrow screen and draw one still wider than the text smaller, controlled by the `fit_equations` key (#32).
 
 ## 0.3.1
 

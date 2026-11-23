@@ -5,7 +5,9 @@ from typing import Any
 
 import pytest
 
+from bookspine.config import NARROW_SCREEN_MACROS
 from bookspine.equations import (
+    EquationRow,
     equation_rows,
     needs_mathjax,
     number_equations,
@@ -182,6 +184,17 @@ def test_labels_follow_mathjax(tex: str, expected: list[str]) -> None:
     rows = equation_rows(tex)
     labels = [row.label for row in rows if row.label and (row.counted or row.tag)]
     assert labels == expected
+
+
+@pytest.mark.parametrize("name", NARROW_SCREEN_MACROS)
+def test_a_mark_in_aligned_changes_no_number_on_a_narrow_screen(name: str) -> None:
+    # A narrow screen reads the mark as a new row, and `aligned` takes one number
+    # whatever its rows.
+    wide_tex = rf"\begin{{aligned}} & a \{name} + b \end{{aligned}} \label{{eq:a}}"
+    narrow_tex = wide_tex.replace(f"\\{name}", NARROW_SCREEN_MACROS[name])
+    assert r"\\ &" in narrow_tex
+    assert equation_rows(narrow_tex) == equation_rows(wide_tex)
+    assert equation_rows(wide_tex) == [EquationRow(label="eq:a")]
 
 
 def test_count_runs_through_section_pages() -> None:
