@@ -6,6 +6,7 @@
 - Resolve an `\eqref` or `\ref` in the first paragraph of a `reference` layout page, which `prepare_reference_page` moved out of the body before `resolve_equation_refs` ran (#31).
 - Break a display equation at its `\narrowbreak` and `\narrowsep` marks on a narrow screen and draw one still wider than the text smaller, controlled by the `fit_equations` key (#32).
 - Stop the build in `number_equations` on a `\narrowbreak` or `\narrowsep` mark that a narrow screen cannot read as a new row of the same equation, and on a `mathjax_macros` definition that uses one (#33).
+- Report in the browser console, from `equations.js`, a display equation that is still wider than the text in a window of 20rem or wider, the narrowest the theme supports (#34).
 
 ## 0.3.1
 

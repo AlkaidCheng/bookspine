@@ -196,8 +196,13 @@ Write a display equation for the full width of the text. On a narrow screen, a w
 to 37.5rem wide (600 pixels at the browser's default text size, more than a phone held
 upright has), an equation breaks at the marks it carries. On any screen an equation still
 wider than the text is drawn smaller, down to 70% of its size, and scrolls sideways only
-below that. A mark is one of two macros, written in an `aligned`, `alignedat` or `split`
-environment, which a narrow screen reads as the start of a new row:
+below that. The theme supports windows from 20rem wide (320 pixels, the width the WCAG
+[Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow) criterion sets), so in such
+a window each row should fit the text at 70%. One that does not scrolls in its own box and
+is reported in the browser's console, so preview a page at 320 pixels. In a narrower
+window an equation may scroll; the page itself never does. A mark is one of two macros,
+written in an `aligned`, `alignedat` or `split` environment, which a narrow screen reads
+as the start of a new row:
 
 | Mark | On a wide screen | On a narrow screen |
 |---|---|---|

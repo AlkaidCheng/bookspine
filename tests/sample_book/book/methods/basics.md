@@ -36,7 +36,7 @@ $$
 and an equation without marks is drawn smaller where it is wider than the text:
 
 $$
-e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \frac{x^4}{4!} + \frac{x^5}{5!} + \dots
+e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \frac{x^4}{4!} + \dots
 $$
 
 ![A flow of steps from $x_0$ to \(x_1\) [@first-paper].](figures/flow.svg)
