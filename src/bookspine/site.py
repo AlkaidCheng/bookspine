@@ -201,9 +201,8 @@ def convert_pages(
         break_bare_urls(page)
         if config.wrap_code:
             split_code_lines(page)
-        if config.is_reference:
-            prepare_reference_page(page)
 
+    listed_pages = list(pages)
     last_page = next(page for page in reversed(pages) if page.kind != "help")
     for glossary_page in make_glossary_pages(pages) if config.glossary else []:
         last_page.next = glossary_page
@@ -215,6 +214,9 @@ def convert_pages(
     # A reference can point forward, so this waits until every page is numbered.
     for page in pages:
         resolve_equation_refs(page, equation_labels)
+    # Last, so that every pass has read the paragraph that leaves the body here.
+    for page in listed_pages if config.is_reference else []:
+        prepare_reference_page(page)
     return converted
 
 
