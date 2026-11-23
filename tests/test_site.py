@@ -108,6 +108,13 @@ def test_an_eqref_reaches_other_pages_and_stays_on_its_own(site_dir: Path) -> No
     assert r"\eqref{eq:second}" in second
 
 
+def test_an_eqref_in_running_text_resolves_like_one_in_math(site_dir: Path) -> None:
+    second = page_text(site_dir, "methods/split/second")
+    link = r"\(\href{../../../methods/split/first/#mjx-eqn:eq:first}{\text{(2.1)}}\)"
+    assert second.count(link) == 2
+    assert r"and \eqref{eq:second} read the same" in second
+
+
 def test_an_eqref_with_no_equation_stops_the_build(project_dir: Path) -> None:
     path = project_dir / "book" / "methods" / "split" / "second.md"
     text = path.read_text(encoding="utf-8").replace("eq:first", "eq:missing")

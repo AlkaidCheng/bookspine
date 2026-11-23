@@ -292,18 +292,66 @@ def test_spaces_in_a_label_become_underscores_in_the_anchor(
     assert "#mjx-eqn:eq_b}" in chapter.body_html
 
 
-def test_code_is_left_alone(chapter: Page, labels: dict[str, tuple[Page, str]]) -> None:
-    body = r"<p><code>\eqref{eq:missing}</code></p>"
+def test_bare_reference_on_the_same_page_stays_with_mathjax(
+    chapter: Page, labels: dict[str, tuple[Page, str]]
+) -> None:
+    body = chapter.body_html + r"<p>See \eqref{eq:a} and \ref {eq:a}.</p>"
     chapter.body_html = body
     resolve_equation_refs(chapter, labels)
     assert chapter.body_html == body
 
 
-def test_unknown_label_fails(
-    chapter: Page, labels: dict[str, tuple[Page, str]]
+def test_bare_reference_to_another_page_becomes_a_link(
+    other: Page, labels: dict[str, tuple[Page, str]]
 ) -> None:
-    chapter.body_html = inline(r"\eqref{eq:missing}")
-    with pytest.raises(BuildError, match=r"\\eqref\{eq:missing\} matches no"):
+    other.body_html = r"<p>See \eqref{eq:a} and \ref{eq:a}.</p>"
+    resolve_equation_refs(other, labels)
+    link = r"\href{../../book/chapter/#mjx-eqn:eq:a}"
+    with_parentheses = inline(link + r"{\text{(1.1)}}")
+    number_alone = inline(link + r"{\text{1.1}}")
+    assert other.body_html == f"<p>See {with_parentheses} and {number_alone}.</p>"
+
+
+def test_bare_reference_beside_math_and_tags(
+    other: Page, labels: dict[str, tuple[Page, str]]
+) -> None:
+    link = inline(r"\href{../../book/chapter/#mjx-eqn:eq:a}{\text{(1.1)}}")
+    other.body_html = f'<p>{inline("x")} in <a href="a/">\\eqref{{eq:a}}</a></p>'
+    resolve_equation_refs(other, labels)
+    assert other.body_html == f'<p>{inline("x")} in <a href="a/">{link}</a></p>'
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        r"<p><code>\eqref{eq:missing}</code></p>",
+        r'<div class="highlight"><pre><code>\eqref{eq:missing}</code></pre></div>',
+        r'<p><a href="a/" title="x > 0 in \eqref{eq:missing}">text</a></p>',
+        r"<!-- don't cite \eqref{eq:missing} yet -->",
+        r"<p>Write it as \\eqref{eq:missing}.</p>",
+    ],
+    ids=["inline code", "code block", "attribute", "comment", "escaped backslash"],
+)
+def test_reference_mathjax_does_not_read_is_left_alone(
+    body: str, chapter: Page, labels: dict[str, tuple[Page, str]]
+) -> None:
+    chapter.body_html = body
+    resolve_equation_refs(chapter, labels)
+    assert chapter.body_html == body
+
+
+@pytest.mark.parametrize(
+    "body",
+    [inline(r"\eqref{eq:missing}"), r"<p>See \eqref{eq:missing}.</p>"],
+    ids=["in math", "bare"],
+)
+def test_unknown_label_fails(
+    body: str, chapter: Page, labels: dict[str, tuple[Page, str]]
+) -> None:
+    chapter.body_html = body
+    with pytest.raises(
+        BuildError, match=r"chapter\.md: \\eqref\{eq:missing\} matches no"
+    ):
         resolve_equation_refs(chapter, labels)
 
 

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from bookspine.config import EQUATION_ANCHOR_PREFIX
 from bookspine.errors import BuildError
 from bookspine.pages import GlossaryEntry, Page
-from bookspine.passes import CODE_SEGMENT_PATTERN
+from bookspine.passes import CODE_SEGMENT_PATTERN, outside_code
 
 # The one version that cannot float: the environment sets below copy its rules, so an
 # upgrade must recheck them against tests/test_equations.py.
@@ -57,8 +57,23 @@ INNER_ENVIRONMENTS = {
 }
 
 _DISPLAY_MATH_PATTERN = re.compile(r'<div class="arithmatex">\\\[(.*?)\\\]</div>', re.S)
-_MATH_PATTERN = re.compile(r'<(div|span) class="arithmatex">.*?</\1>', re.S)
-_EQUATION_REF_PATTERN = re.compile(r"\\(eqref|ref)\s*\{([^}]*)\}")
+_EQUATION_REF = r"\\(?P<command>eqref|ref)\s*\{(?P<label>[^}]*)\}"
+_EQUATION_REF_PATTERN = re.compile(_EQUATION_REF)
+# The parts of a page's HTML that matter to a reference outside code. MathJax reads a
+# reference inside math and bare in the text. It reads none in a comment or in a tag,
+# which is matched whole because a quoted attribute value may hold a >. In the text it
+# prints ``\\`` as one backslash, so the name after that is not a command.
+# https://github.com/mathjax/MathJax-src/blob/3.2.2/ts/input/tex/FindTeX.ts#L107
+_REF_TOKEN_PATTERN = re.compile(
+    rf"""
+    (?P<math><(?P<element>div|span)\ class="arithmatex">.*?</(?P=element)>)
+    | <!--.*?-->
+    | <(?:[^>"']|"[^"]*"|'[^']*')+>
+    | \\\\
+    | {_EQUATION_REF}
+    """,
+    re.X | re.S,
+)
 _TEX_COMMENT_PATTERN = re.compile(r"((?<!\\)(?:\\\\)*)%.*")
 _TEX_TOKEN_PATTERN = re.compile(
     r"""
@@ -236,25 +251,39 @@ def resolve_equation_refs(
 ) -> None:
     """Check every equation reference and turn those that leave the page into links.
 
+    A reference is read where MathJax reads one: inside math, and bare in the text
+    around it, where a link is set as inline math. Code, comments and the attributes
+    of a tag are left as written.
+
     Raises
     ------
     BuildError
         If a reference matches no label in `equation_labels`.
     """
 
-    def replace(match: re.Match[str]) -> str:
-        command, label = match.group(1), match.group(2)
+    def link_tex(reference: re.Match[str]) -> str:
+        command, label = reference["command"], reference["label"]
         if label not in equation_labels:
             raise BuildError(
                 f"{page.source_path}: \\{command}{{{label}}} matches no numbered equation"
             )
         target, number = equation_labels[label]
         if target is page:
-            return match.group(0)  # MathJax resolves references within a page
+            return ""  # MathJax resolves references within a page
         text = f"({number})" if command == "eqref" else number
         anchor = equation_anchor(label)
         return rf"\href{{{page.href(target)}#{anchor}}}{{\text{{{text}}}}}"
 
-    page.body_html = _MATH_PATTERN.sub(
-        lambda math: _EQUATION_REF_PATTERN.sub(replace, math.group(0)), page.body_html
+    def replace(token: re.Match[str]) -> str:
+        if token["math"]:
+            return _EQUATION_REF_PATTERN.sub(
+                lambda reference: link_tex(reference) or reference.group(0),
+                token.group(0),
+            )
+        if token["command"] and (tex := link_tex(token)):
+            return rf'<span class="arithmatex">\({tex}\)</span>'
+        return token.group(0)
+
+    page.body_html = outside_code(
+        page.body_html, lambda text: _REF_TOKEN_PATTERN.sub(replace, text)
     )
