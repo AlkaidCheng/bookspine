@@ -191,6 +191,40 @@ as written.
 Place `\label` after `\end{aligned}` or `\end{split}`, because MathJax discards one
 written inside them. A page with no math does not load MathJax.
 
+Write a display equation for the full width of the text. On a narrow screen, a window up
+to 37.5rem wide (600 pixels at the browser's default text size, more than a phone held
+upright has), an equation breaks at the marks it carries. On any screen an equation still
+wider than the text is drawn smaller, down to 70% of its size, and scrolls sideways only
+below that. A mark is one of two macros, written in an `aligned` or `split` environment,
+which a narrow screen reads as the start of a new row:
+
+| Mark | On a wide screen | On a narrow screen |
+|---|---|---|
+| `\narrowbreak` | Nothing. | A new row for the rest of a formula, indented. |
+| `\narrowsep` | A `\qquad`, between two formulas. | A new row for the second formula. |
+
+```markdown
+$$
+\begin{aligned}
+& (a + b)^3 = a^3 + 3 a^2 b
+\narrowbreak + 3 a b^2 + b^3 ,
+\narrowsep (a - b)^3 = a^3 - 3 a^2 b
+\narrowbreak - 3 a b^2 - b^3 .
+\end{aligned}
+\label{eq:cubes}
+$$
+```
+
+A wide screen sets this equation on one line, and a narrow one on four rows, the second
+and fourth indented. The new rows start at the row's `&`, so put one where the rows are
+to align: at the start of the first formula, or before its relation sign. A row cannot
+end inside braces or between `\left` and `\right`, and a mark there shows an error on
+a narrow screen only, so give a bracket that spans a mark its size with `\bigl` and
+`\bigr`. The equation keeps its one number on both screens. A window resized across
+that width typesets its equations again where they stand, and an exported equation
+defines the marks as a wide screen reads them. `fit_equations: false` in `book.yaml`
+leaves every equation at its size to scroll.
+
 ### Citations
 
 `[@key]` cites an entry of the page's `references`, and `[@a; @b]` cites several. The
@@ -313,11 +347,12 @@ prints on its default paper.
 | `search_hint` | `Type to search chapter and section text.`, or `Type what you are looking for.` in the reference layout | The line under the search box. |
 | `enlarge_tables` | `true` | Whether a table has a button that opens it enlarged. Figures always do. |
 | `export_menus` | `true` | Whether tables, figures, code blocks and equations offer an [export menu](#exporting). When it is `false`, a code block keeps its copy button, which stays faintly visible on a touch screen. |
+| `fit_equations` | `true` | Whether a display equation [breaks at its marks](#equations) on a narrow screen and is drawn smaller where it is still wider than the text. When it is `false`, every equation scrolls sideways instead, and a mark reads as on a wide screen. |
 | `glossary` | `true` | Whether `\glossary` tags make [glossary](#glossary) pages. |
 | `not_found_page` | `false` | Whether the site has a `404.html` for a missing address, with the sidebar and search. Needs `url`, because its links start from the site's path, so it shows without its styles on a local preview served from another path. |
 | `sitemap` | `false` | Whether the site has a `sitemap.xml` listing every page. Needs `url`. |
 | `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
-| `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. |
+| `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. The names `narrowbreak` and `narrowsep` belong to the [marks](#equations). |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 
 ```yaml

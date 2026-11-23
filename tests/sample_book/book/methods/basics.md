@@ -14,6 +14,31 @@ $$
 x = 1 \label{eq:one} \glossary{Unit value}
 $$
 
+A mark shows where an equation written for the full width may break on a narrow screen,
+
+$$
+\begin{aligned}
+& (a + b)^5 = a^5 + 5 a^4 b + 10 a^3 b^2
+\narrowbreak + 10 a^2 b^3 + 5 a b^4 + b^5 ,
+\end{aligned}
+\label{eq:fifth-power}
+$$
+
+another parts two formulas,
+
+$$
+\begin{aligned}
+& \cos^2 x + \sin^2 x = 1 ,
+\narrowsep \cosh^2 x - \sinh^2 x = 1 ,
+\end{aligned}
+$$
+
+and an equation without marks is drawn smaller where it is wider than the text:
+
+$$
+e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \frac{x^4}{4!} + \frac{x^5}{5!} + \dots
+$$
+
 ![A flow of steps from $x_0$ to \(x_1\) [@first-paper].](figures/flow.svg)
 
 | Name | Value |

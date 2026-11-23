@@ -9,6 +9,8 @@ import yaml
 from bookspine.config import (
     DEFAULT_PYGMENTS_DARK,
     DEFAULT_PYGMENTS_LIGHT,
+    NARROW_SCREEN_MACROS,
+    WIDE_SCREEN_MACROS,
     ChapterConfig,
     Project,
     load_config,
@@ -52,6 +54,7 @@ def test_defaults_fill_every_optional_key(tmp_path: Path) -> None:
     assert config.parts == ()
     assert config.enlarge_tables is True
     assert config.export_menus is True
+    assert config.fit_equations is True
     assert config.wrap_code is True
     assert config.help_page == ""
     assert config.mathjax_macros == {}
@@ -103,6 +106,10 @@ def test_macros_keep_their_order_and_definitions(tmp_path: Path) -> None:
     assert list(config.mathjax_macros.items()) == list(macros.items())
 
 
+def test_each_mark_has_a_definition_for_both_screens() -> None:
+    assert WIDE_SCREEN_MACROS.keys() == NARROW_SCREEN_MACROS.keys()
+
+
 @pytest.mark.parametrize(
     ("keys", "message"),
     [
@@ -117,12 +124,15 @@ def test_macros_keep_their_order_and_definitions(tmp_path: Path) -> None:
         ({"repo": "https://example.org"}, "repo needs a repo_host"),
         ({"enlarge_tables": "no"}, "enlarge_tables must be true or false"),
         ({"export_menus": 1}, "export_menus must be true or false"),
+        ({"fit_equations": "no"}, "fit_equations must be true or false"),
         ({"wrap_code": "yes"}, "wrap_code must be true or false"),
         ({"mathjax_macros": ["dd"]}, "mathjax_macros must be a mapping"),
         ({"mathjax_macros": {"d d": "x"}}, "not a TeX macro name"),
         ({"mathjax_macros": {"dd": 3}}, "macro dd must be"),
         ({"mathjax_macros": {"dd": ["x"]}}, "macro dd must be"),
         ({"mathjax_macros": {"dd": ["x", True]}}, "macro dd must be"),
+        ({"mathjax_macros": {"narrowbreak": "x"}}, "macro narrowbreak marks where"),
+        ({"mathjax_macros": {"narrowsep": ""}}, "macro narrowsep marks where"),
         ({"parts": "hep"}, "parts must be a list"),
         ({"parts": [{"title": "No dir"}]}, "every part needs a dir"),
         ({"parts": [{"dir": "a", "colour": "red"}]}, "unknown key: colour"),

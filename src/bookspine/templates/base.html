@@ -41,19 +41,21 @@ window.MathJax = {
         return chapter ? chapter + "." + number : String(number);
       }
     },
-    {% if book.mathjax_macros %}
     macros: {
-      {% for name, definition in book.mathjax_macros.items() %}
+      {% for name, definition in mathjax_macros.items() %}
       {{ name }}: {{ definition | tojson }}{{ "," if not loop.last else "" }}
       {% endfor %}
     }
-    {% endif %}
   },
   options: { ignoreHtmlClass: "highlight|nomath" },
   chtml: { scale: 0.98 }
 };
 </script>
 {% if load_mathjax %}
+{% if book.fit_equations %}
+{# Before MathJax, whose start it takes part in: deferred scripts run in this order. #}
+<script defer src="{{ page.root }}static/equations.js" data-narrow-macros='{{ narrow_macros | tojson }}'></script>
+{% endif %}
 <script defer src="{{ mathjax_url }}"></script>
 {% endif %}
 {% block extra_head %}{% endblock %}
