@@ -500,8 +500,9 @@ def keep_code_tokens(text: str) -> str:
 def prepare_reference_page(page: Page) -> None:
     """Give `page` what the reference layout shows beyond its body.
 
-    The first paragraph moves from the body to ``lede_html``. This runs after the search
-    index is made, which keeps that paragraph's text.
+    The first paragraph moves from the body to ``lede_html``. This runs after every pass
+    over the body, so the search index keeps that paragraph's text and the references
+    to equations in it are resolved.
     """
     if page.kind in LEDE_KINDS and (lede := _LEDE_PATTERN.match(page.body_html)):
         page.lede_html = keep_code_tokens(lede.group(1))

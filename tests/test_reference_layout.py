@@ -64,6 +64,34 @@ def test_a_link_in_the_lede_reaches_its_page(reference_site_dir: Path) -> None:
     assert 'href="../tools/find/"' in page_text(reference_site_dir, "tools/")
 
 
+def lede_of_first_section(reference_dir: Path, reference: str) -> str:
+    """Build the sample with an equation on one page and `reference` in another's lede."""
+    tools_dir = reference_dir / "book" / "tools"
+    with (tools_dir / "plain.md").open("a", encoding="utf-8") as plain:
+        plain.write("\n$$\nx = 1 \\label{eq:x}\n$$\n")
+    first_path = tools_dir / "deep" / "first.md"
+    text = first_path.read_text(encoding="utf-8")
+    first_path.write_text(
+        text.replace("introduction.", f"introduction, after {reference}."),
+        encoding="utf-8",
+    )
+    page = page_text(build_book(reference_dir).site_dir, "tools/deep/first/")
+    return page.partition('<p class="lede">')[2].partition("</p>")[0]
+
+
+@pytest.mark.parametrize("reference", [r"\eqref{eq:x}", r"$\eqref{eq:x}$"])
+def test_an_eqref_in_the_lede_reaches_its_page(
+    reference_dir: Path, reference: str
+) -> None:
+    lede = lede_of_first_section(reference_dir, reference)
+    assert r"\(\href{../../../tools/plain/#mjx-eqn:eq:x}{\text{(" in lede
+
+
+def test_an_eqref_in_the_lede_needs_its_equation(reference_dir: Path) -> None:
+    with pytest.raises(BuildError, match=r"first\.md: \\eqref\{eq:y\} matches no"):
+        lede_of_first_section(reference_dir, r"\eqref{eq:y}")
+
+
 def test_the_search_keeps_the_first_paragraph(reference_site_dir: Path) -> None:
     index = json.loads((reference_site_dir / "search.json").read_text(encoding="utf-8"))
     entries = [entry for entry in index if entry["url"] == "tools/find/"]
