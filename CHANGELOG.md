@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Resolve an `\eqref` or `\ref` written in running text in `resolve_equation_refs`, which checked and linked only those inside math (#30).
+
 ## 0.3.1
 
 - Stop a citation in a figure's caption from breaking the figure's `<svg>` or `<img>` tag in `number_figures_and_tables` (#27).

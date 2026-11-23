@@ -178,6 +178,11 @@ Write inline math as `$…$` or `\(…\)`, and display math as `$$ … $$` on li
 own. `\[…\]` or a `\begin{…}` environment that starts a paragraph is display math too.
 Every display equation is numbered, and `\notag` suppresses a number. `\label{eq:name}` and
 `\eqref{eq:name}` reach any page in the book, so a label must be unique across it.
+Write the reference in running text or inside math, as `\eqref{eq:name}` or
+`$\eqref{eq:name}$`; `\ref{eq:name}` gives the number without its parentheses. In
+running text Markdown still reads the label, turning `--` into a dash and `*` into
+emphasis, so a label with such characters needs the math form. A reference in code stays
+as written.
 Place `\label` after `\end{aligned}` or `\end{split}`, because MathJax discards one
 written inside them. A page with no math does not load MathJax.
 
