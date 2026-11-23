@@ -176,6 +176,11 @@ The search leaves out the labels and keeps the text of every tab.
 
 Write inline math as `$…$` or `\(…\)`, and display math as `$$ … $$` on lines of their
 own. `\[…\]` or a `\begin{…}` environment that starts a paragraph is display math too.
+Between the `$$` lines CommonMark still reads each line, so one that begins with `+`,
+`-` or `*` and a space, or with `>`, starts a list or a quotation and the equation is
+not typeset. End the line before with the operator, or write the equation in `\[…\]`
+or an environment, whose lines are kept as written.
+
 Every display equation is numbered, and `\notag` suppresses a number. `\label{eq:name}` and
 `\eqref{eq:name}` reach any page in the book, so a label must be unique across it.
 Write the reference in running text or inside math, as `\eqref{eq:name}` or
