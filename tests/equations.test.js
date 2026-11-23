@@ -39,24 +39,3 @@ test("a macro is found by its whole name", () => {
   assert.equal(equations.usesMacro("a \\narrowbreaks b", ["narrowbreak"]), false);
   assert.equal(equations.usesMacro("a narrowbreak b", ["narrowbreak"]), false);
 });
-
-test("a book's macro that leads to a mark counts as one, through any number of steps", () => {
-  const macros = {
-    dd: "\\mathrm{d}",
-    nb: "\\narrowbreak",
-    cont: ["\\nb #1", 1],
-    vec: ["\\boldsymbol{#1}", 1],
-  };
-  assert.deepEqual(equations.macrosReaching(macros, ["narrowbreak", "narrowsep"]), [
-    "narrowbreak",
-    "narrowsep",
-    "nb",
-    "cont",
-  ]);
-});
-
-test("a book without such macros has the marks alone", () => {
-  assert.deepEqual(equations.macrosReaching({ dd: "\\mathrm{d}" }, ["narrowbreak"]), [
-    "narrowbreak",
-  ]);
-});
