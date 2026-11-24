@@ -24,6 +24,13 @@
   /* A hair under the exact ratio, so that rounding leaves no pixel to scroll. */
   var FIT_MARGIN = 0.995;
 
+  /* The narrowest window the theme supports: 320 CSS pixels at the default text size,
+     the width at which WCAG 2.2 asks content to reflow (Success Criterion 1.4.10):
+     https://www.w3.org/WAI/WCAG22/Understanding/reflow
+     In such a window an equation should fit its box at MIN_SCALE, and one that does not
+     is reported in the console. A narrower window lets it scroll in its box. */
+  var SUPPORTED_QUERY = "(min-width: 20rem)";
+
   /* How long the window must keep a size before the equations are fitted again. */
   var RESIZE_DELAY_MS = 150;
 
@@ -32,6 +39,12 @@
   function fitScale(boxWidth, contentWidth) {
     if (contentWidth <= boxWidth) return 1;
     return Math.max(MIN_SCALE, (boxWidth / contentWidth) * FIT_MARGIN);
+  }
+
+  /* Whether content `contentWidth` wide is still wider than a box `boxWidth` wide when
+     drawn at the scale fitScale gives it. */
+  function overflows(boxWidth, contentWidth) {
+    return contentWidth * fitScale(boxWidth, contentWidth) > boxWidth;
   }
 
   /* TeX that gives each macro of `macros`, which take no arguments, its definition. */
@@ -54,6 +67,7 @@
       FIT_MARGIN: FIT_MARGIN,
       MIN_SCALE: MIN_SCALE,
       fitScale: fitScale,
+      overflows: overflows,
       redefinitions: redefinitions,
       usesMacro: usesMacro
     };
@@ -70,6 +84,8 @@
   var wideMacros = {};
   Object.keys(narrowMacros).forEach(function (name) { wideMacros[name] = configMacros[name]; });
   var narrowScreen = window.matchMedia(NARROW_QUERY);
+  var supportedWindow = window.matchMedia(SUPPORTED_QUERY);
+  var reportedBoxes = new WeakSet();
 
   /* A definition made in one formula holds for the rest of the page:
      https://docs.mathjax.org/en/v3.2/input/tex/macros.html
@@ -88,10 +104,29 @@
   function fitEquations() {
     var boxes = equationBoxes();
     boxes.forEach(function (box) { box.style.fontSize = ""; });
-    var scales = boxes.map(function (box) { return fitScale(box.clientWidth, box.scrollWidth); });
+    var widths = boxes.map(function (box) { return [box.clientWidth, box.scrollWidth]; });
     boxes.forEach(function (box, index) {
-      if (scales[index] < 1) box.style.fontSize = (scales[index] * 100).toFixed(2) + "%";
+      var scale = fitScale(widths[index][0], widths[index][1]);
+      if (scale < 1) box.style.fontSize = (scale * 100).toFixed(2) + "%";
+      if (supportedWindow.matches && overflows(widths[index][0], widths[index][1])) {
+        reportTooWide(box);
+      }
     });
+  }
+
+  /* An equation that scrolls in a window the theme supports, once for each page load,
+     with its TeX for the author to find it by. */
+  function reportTooWide(box) {
+    if (reportedBoxes.has(box)) return;
+    reportedBoxes.add(box);
+    var item = Array.from(window.MathJax.startup.document.math).filter(function (math) {
+      return box.contains(math.typesetRoot);
+    })[0];
+    console.warn(
+      "bookspine: an equation is wider than the text at " + MIN_SCALE * 100 +
+      "% of its size in a window the theme supports; add a mark or shorten a row:",
+      item ? item.math : box
+    );
   }
 
   /* Typesetting again changes the height of the equations above the reader's place. The

@@ -25,6 +25,21 @@ test("an equation is drawn no smaller than the smallest scale", () => {
   assert.equal(equations.fitScale(343, 2000), equations.MIN_SCALE);
 });
 
+test("an equation that fits at the smallest scale or larger does not overflow", () => {
+  assert.equal(equations.overflows(288, 288), false);
+  assert.equal(equations.overflows(288, 380), false);
+  assert.equal(equations.overflows(288, 288 / equations.MIN_SCALE), false);
+});
+
+test("an equation still wider than its box at the smallest scale overflows", () => {
+  assert.equal(equations.overflows(288, 288 / equations.MIN_SCALE + 1), true);
+  assert.equal(equations.overflows(288, 426), true);
+});
+
+test("an equation with no width, as in a closed box, does not overflow", () => {
+  assert.equal(equations.overflows(0, 0), false);
+});
+
 test("each macro is redefined in TeX, an empty definition included", () => {
   assert.equal(
     equations.redefinitions({ narrowbreak: "\\\\ & \\quad {}", narrowsep: "\\\\ &" }),
