@@ -165,6 +165,22 @@ def test_search_holds_every_page(site_dir: Path) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    "setting", ["", "\nfit_equations: false\n"], ids=["fitted", "not fitted"]
+)
+def test_a_misplaced_mark_stops_the_build(project_dir: Path, setting: str) -> None:
+    add_to_config(project_dir, setting)
+    path = project_dir / "book" / "methods" / "basics.md"
+    text = path.read_text(encoding="utf-8")
+    marked = r"\narrowsep \cosh^2 x"
+    assert marked in text
+    path.write_text(text.replace(marked, rf"\left( {marked} \right)"), encoding="utf-8")
+    with pytest.raises(
+        BuildError, match=r"basics\.md: \\narrowsep between \\left and \\right: "
+    ):
+        build_book(project_dir)
+
+
 def test_macros_are_written_into_the_mathjax_configuration(site_dir: Path) -> None:
     home = page_text(site_dir, "")
     assert 'dd: "\\\\mathrm{d}",\n' in home

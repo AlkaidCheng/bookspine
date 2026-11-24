@@ -157,6 +157,9 @@ _CHAPTER_KEYS = {"dir", "sections"}
 # A TeX control word, written as an unquoted key of MathJax's macros object:
 # https://github.com/mathjax/MathJax-src/blob/3.2.2/ts/input/tex/configmacros/ConfigMacrosConfiguration.ts
 _MACRO_NAME_PATTERN = re.compile(r"[A-Za-z]+")
+# A mark used in TeX, which a book's macro may not hold: the build checks where each
+# mark stands in the pages, and would not see one inside a macro.
+_MARK_PATTERN = re.compile(rf"\\({'|'.join(WIDE_SCREEN_MACROS)})(?![A-Za-z])")
 
 
 @dataclass(frozen=True)
@@ -295,7 +298,7 @@ class BookConfig:
         Whether a long line of code wraps instead of scrolling.
     mathjax_macros : Mapping[str, Any]
         TeX macros by name, each a definition or ``[definition, argument count]``. The
-        names in ``WIDE_SCREEN_MACROS`` are taken.
+        names in ``WIDE_SCREEN_MACROS`` are taken, and no definition may use them.
     pygments_light, pygments_dark : str
         The code colour styles of the two colour schemes.
     """
@@ -473,6 +476,12 @@ def _checked_macros(record: Any) -> Mapping[str, Any]:
             raise BuildError(
                 f"{CONFIG_NAME}: macro {name} must be a definition or "
                 "[definition, argument count]"
+            )
+        text = definition if isinstance(definition, str) else definition[0]
+        if mark := _MARK_PATTERN.search(text):
+            raise BuildError(
+                f"{CONFIG_NAME}: macro {name} uses {mark.group()}, which only a page "
+                "may write, so that the build can check where it stands"
             )
     return record
 

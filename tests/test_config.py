@@ -133,6 +133,11 @@ def test_each_mark_has_a_definition_for_both_screens() -> None:
         ({"mathjax_macros": {"dd": ["x", True]}}, "macro dd must be"),
         ({"mathjax_macros": {"narrowbreak": "x"}}, "macro narrowbreak marks where"),
         ({"mathjax_macros": {"narrowsep": ""}}, "macro narrowsep marks where"),
+        ({"mathjax_macros": {"nb": r"\narrowbreak"}}, r"macro nb uses \\narrowbreak,"),
+        (
+            {"mathjax_macros": {"cont": [r"#1 \narrowsep", 1]}},
+            r"macro cont uses \\narrowsep,",
+        ),
         ({"parts": "hep"}, "parts must be a list"),
         ({"parts": [{"title": "No dir"}]}, "every part needs a dir"),
         ({"parts": [{"dir": "a", "colour": "red"}]}, "unknown key: colour"),

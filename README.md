@@ -18,7 +18,8 @@ file. A second layout leaves out the numbers, for a site that readers look thing
 
 The build stops on a broken internal link or anchor, a link that starts at the site's
 root, a missing figure, a citation without a reference entry, an `\eqref` to a label no
-numbered equation carries, or an equation label used twice. A failed build leaves `site/`
+numbered equation carries, an equation label used twice, or a [mark](#equations) that
+stands where an equation cannot break on a narrow screen. A failed build leaves `site/`
 as it was.
 
 ## Install
@@ -195,8 +196,8 @@ Write a display equation for the full width of the text. On a narrow screen, a w
 to 37.5rem wide (600 pixels at the browser's default text size, more than a phone held
 upright has), an equation breaks at the marks it carries. On any screen an equation still
 wider than the text is drawn smaller, down to 70% of its size, and scrolls sideways only
-below that. A mark is one of two macros, written in an `aligned` or `split` environment,
-which a narrow screen reads as the start of a new row:
+below that. A mark is one of two macros, written in an `aligned`, `alignedat` or `split`
+environment, which a narrow screen reads as the start of a new row:
 
 | Mark | On a wide screen | On a narrow screen |
 |---|---|---|
@@ -216,14 +217,23 @@ $$
 ```
 
 A wide screen sets this equation on one line, and a narrow one on four rows, the second
-and fourth indented. The new rows start at the row's `&`, so put one where the rows are
-to align: at the start of the first formula, or before its relation sign. A row cannot
-end inside braces or between `\left` and `\right`, and a mark there shows an error on
-a narrow screen only, so give a bracket that spans a mark its size with `\bigl` and
-`\bigr`. The equation keeps its one number on both screens. A window resized across
-that width typesets its equations again where they stand, and an exported equation
-defines the marks as a wide screen reads them. `fit_equations: false` in `book.yaml`
-leaves every equation at its size to scroll.
+and fourth indented. Both screens show the same symbols and the one number. A mark in
+another place would go wrong on a narrow screen only, with an error, an extra number or
+a changed layout, so the build stops on any mark that breaks one of these rules:
+
+| Rule | Why |
+|---|---|
+| A mark stands directly in `aligned`, `alignedat` or `split`, in a display equation. | These take no number of their own, and their rows align at `&`. |
+| It is not inside braces, as in an argument of `\frac`, nor between `\left` and `\right`. | A row cannot end there. Give a bracket that spans a mark its size with `\bigl` and `\bigr`. |
+| It stands after its row's first `&` and before its second. | The new row starts at the `&`, so put one where the rows are to align: at the start of the first formula, or before its relation sign. |
+| It has other content of its row before and after it, and no mark next to it. | A narrow screen would show an empty row. |
+| `\narrowbreak` comes right before a relation or a binary operator, such as `=`, `+` or `\times`. | The new row reads as the rest of the formula. A product breaks before a `\times` written in the page. |
+
+The build does not look inside a book's own macros, so no macro of `mathjax_macros` may
+use a mark. A window resized across that width typesets its equations again where they
+stand, and an exported equation defines the marks as a wide screen reads them.
+`fit_equations: false` in `book.yaml` leaves every equation at its size to scroll, and the
+build checks the marks all the same.
 
 ### Citations
 
@@ -352,7 +362,7 @@ prints on its default paper.
 | `not_found_page` | `false` | Whether the site has a `404.html` for a missing address, with the sidebar and search. Needs `url`, because its links start from the site's path, so it shows without its styles on a local preview served from another path. |
 | `sitemap` | `false` | Whether the site has a `sitemap.xml` listing every page. Needs `url`. |
 | `wrap_code` | `true` | Whether a long line of code wraps, its continuation indented past the line's own indentation, instead of scrolling sideways. A block with line numbers always scrolls. |
-| `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. The names `narrowbreak` and `narrowsep` belong to the [marks](#equations). |
+| `mathjax_macros` | empty | TeX macros, each a definition or `[definition, argument count]`. The names `narrowbreak` and `narrowsep` belong to the [marks](#equations), and no definition may use them. |
 | `pygments_light`, `pygments_dark` | `friendly`, `github-dark` | The [code colours](https://pygments.org/styles/) of each colour scheme. |
 
 ```yaml
