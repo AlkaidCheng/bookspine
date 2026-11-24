@@ -41,28 +41,12 @@
     }).join("");
   }
 
+  /* Whether `tex` uses one of the macros `names`. A book's own macro cannot hold a
+     mark (config.py), so a page that uses a mark names it. */
   function usesMacro(tex, names) {
     return names.some(function (name) {
       return new RegExp("\\\\" + name + "(?![A-Za-z])").test(tex);
     });
-  }
-
-  /* `names`, and the macros of `macros` whose definitions lead to one of them, as a
-     book's shorter name for a mark does. */
-  function macrosReaching(macros, names) {
-    var reaching = names.slice();
-    var grew = true;
-    while (grew) {
-      grew = false;
-      Object.keys(macros).forEach(function (name) {
-        var definition = Array.isArray(macros[name]) ? macros[name][0] : macros[name];
-        if (reaching.indexOf(name) < 0 && usesMacro(definition, reaching)) {
-          reaching.push(name);
-          grew = true;
-        }
-      });
-    }
-    return reaching;
   }
 
   if (typeof module !== "undefined" && module.exports) {
@@ -70,7 +54,6 @@
       FIT_MARGIN: FIT_MARGIN,
       MIN_SCALE: MIN_SCALE,
       fitScale: fitScale,
-      macrosReaching: macrosReaching,
       redefinitions: redefinitions,
       usesMacro: usesMacro
     };
@@ -142,7 +125,7 @@
   }
 
   function pageUsesMarks() {
-    var names = macrosReaching(configMacros, Object.keys(narrowMacros));
+    var names = Object.keys(narrowMacros);
     return Array.from(window.MathJax.startup.document.math).some(function (item) {
       return usesMacro(item.math, names);
     });
